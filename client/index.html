@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyframe Flow</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Standard CEP JS library -->
+    <script src="CSInterface.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header style="position: relative;">
+            <h1>Flow Clone</h1>
+            <button id="clearAppBgBtn" class="star-btn" title="Clear Panel Background" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #ff4d4f; width: 24px; height: 24px; padding: 4px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+            </button>
+        </header>
+
+        <div class="canvas-container">
+            <div id="canvasBg"></div>
+            <canvas id="bezierCanvas"></canvas>
+            <input type="file" id="appBgInput" accept="image/*" style="display: none;">
+            <input type="file" id="bgInput" accept="image/*" style="display: none;">
+        </div>
+        
+        <div class="coord-row">
+            <input type="color" id="colorPicker" class="color-picker-btn" value="#1890ff" title="Change Accent Color">
+            <div id="coordinateDisplay">0.42, 0.00, 0.58, 1.00</div>
+            
+            <div class="bg-dropdown-container">
+                <button id="mainBgBtn" class="star-btn" title="Background Options">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                </button>
+                <div class="bg-dropdown-menu" id="bgDropdown">
+                    <button id="appBgBtn" class="star-btn" title="Change Panel Background">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="3" y1="9" x2="21" y2="9"></line>
+                        </svg>
+                    </button>
+                    <button id="bgBtn" class="star-btn" title="Change Curve Background">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                            <polyline points="13 2 13 9 20 9"></polyline>
+                        </svg>
+                    </button>
+                    <button id="clearBgBtn" class="star-btn" title="Clear All Backgrounds" style="color: #ff4d4f;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <button id="saveBtn" class="star-btn" title="Save Custom Preset">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+            </button>
+        </div>
+
+        <div class="controls">
+            <button id="getBtn" class="secondary-btn" title="Get Curve from AE">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="7 10 12 15 17 10"></polyline>
+                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+            </button>
+            <button id="applyBtn" class="primary-btn">APPLY EASE</button>
+            <button id="reverseBtn" class="secondary-btn" title="Reverse Curve (In/Out)">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="17 1 21 5 17 9"></polyline>
+                    <line x1="3" y1="5" x2="21" y2="5"></line>
+                    <polyline points="7 23 3 19 7 15"></polyline>
+                    <line x1="21" y1="19" x2="3" y2="19"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div class="presets-section">
+            <h3>Presets</h3>
+            <div id="presetsGrid" class="presets-grid">
+                <!-- Preset cards will be populated here by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Toast Notification -->
+    <div id="toast" class="toast">Preset Saved!</div>
+
+    <!-- Custom Prompt Modal -->
+    <div id="promptModal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <h4 style="font-size: 18px; margin-bottom: 8px;">Save Preset</h4>
+            <p id="saveModalValues" style="color: var(--text-secondary); margin-bottom: 16px; font-size: 13px;">Graph values: 0.00, 0.00, 1.00, 1.00</p>
+            <input type="text" id="presetNameInput" placeholder="Name this preset" style="text-align: center;">
+            <div class="modal-actions">
+                <button id="cancelSaveBtn" class="secondary-btn">Cancel</button>
+                <button id="confirmSaveBtn" class="primary-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <div style="margin-bottom: 16px; display: flex; justify-content: center;">
+                <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="2" fill="none" style="color: #ff4d4f;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <h4 style="font-size: 18px; margin-bottom: 8px;">Delete Preset?</h4>
+            <p id="deleteModalText" style="display: none;"></p>
+            <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 13px;">This can't be undone!</p>
+            <div class="modal-actions">
+                <button id="cancelDeleteBtn" class="secondary-btn">Cancel</button>
+                <button id="confirmDeleteBtn" class="primary-btn" style="background-color: #ff4d4f; color: white;">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

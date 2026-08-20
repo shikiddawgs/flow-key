@@ -1,0 +1,13 @@
+[
+  { "name": "Ease In Out", "value": [0.42, 0, 0.58, 1] },
+  { "name": "Ease In", "value": [0.42, 0, 1, 1] },
+  { "name": "Ease Out", "value": [0, 0, 0.58, 1] },
+  { "name": "Linear", "value": [0, 0, 1, 1] },
+  { "name": "Expo In", "value": [0.95, 0.05, 0.795, 0.035] },
+  { "name": "Expo Out", "value": [0.19, 1, 0.22, 1] },
+  { "name": "Expo In Out", "value": [1, 0, 0, 1] },
+  { "name": "Back Out", "value": [0.175, 0.885, 0.32, 1.275] },
+  { "name": "Snappy", "value": [0.1, 1, 0.1, 1] },
+  { "name": "Smooth", "value": [0.6, 0.1, 0.2, 1] },
+  { "name": "Fast Out Slow In", "value": [0.4, 0, 0.2, 1] }
+]
