@@ -693,3 +693,23 @@ if (clearAppBgBtn) {
         if (appContainer) appContainer.style.backgroundImage = 'none';
     });
 }
+
+// --- Dev Tools / Context Menu & Flyout Menu ---
+if (isCEP && csInterface) {
+    // 1. Right-click Context Menu
+    const menuXML = '<Menu><MenuItem Id="reload" Label="Reload Panel (Dev)"/></Menu>';
+    csInterface.setContextMenu(menuXML, (menuId) => {
+        if (menuId === "reload") {
+            window.location.reload(true);
+        }
+    });
+
+    // 2. Flyout Menu (Titik 3 di panel tab AE)
+    const flyoutXML = '<Menu><MenuItem Id="reload_flyout" Label="Reload Panel (Dev)"/></Menu>';
+    csInterface.setPanelFlyoutMenu(flyoutXML);
+    csInterface.addEventListener("com.adobe.csxs.events.flyoutMenuClicked", (event) => {
+        if (event.data.menuId === "reload_flyout") {
+            window.location.reload(true);
+        }
+    });
+}
