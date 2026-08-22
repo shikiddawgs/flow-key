@@ -10,6 +10,7 @@
 </head>
 <body>
     <div class="container">
+        <!-- 1. Header (Static) -->
         <header style="position: relative;">
             <h1>Flow Clone</h1>
             <button id="clearAppBgBtn" class="star-btn" title="Clear Panel Background" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #ff4d4f; width: 24px; height: 24px; padding: 4px;">
@@ -20,76 +21,127 @@
             </button>
         </header>
 
-        <div class="canvas-container">
-            <div id="canvasBg"></div>
-            <canvas id="bezierCanvas"></canvas>
-            <input type="file" id="appBgInput" accept="image/*" style="display: none;">
-            <input type="file" id="bgInput" accept="image/*" style="display: none;">
-        </div>
-        
-        <div class="coord-row">
-            <input type="color" id="colorPicker" class="color-picker-btn" value="#1890ff" title="Change Accent Color">
-            <div id="coordinateDisplay">0.42, 0.00, 0.58, 1.00</div>
-            
-            <div class="bg-dropdown-container">
-                <button id="mainBgBtn" class="star-btn" title="Background Options">
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                        <polyline points="21 15 16 10 5 21"></polyline>
+        <!-- 2. Middle Section (Dynamic) -->
+        <div class="middle-section">
+            <div class="view-panels">
+                <!-- Mode 1: Value / Bezier -->
+                <div id="view-value" class="view-panel active">
+                    <div class="canvas-container">
+                        <div id="canvasBg"></div>
+                        <canvas id="bezierCanvas"></canvas>
+                        <input type="file" id="appBgInput" accept="image/*" style="display: none;">
+                        <input type="file" id="bgInput" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <div class="coord-row">
+                        <input type="color" id="colorPicker" class="color-picker-btn" value="#1890ff" title="Change Accent Color">
+                        <div id="coordinateDisplay">0.42, 0.00, 0.58, 1.00</div>
+                        
+                        <div class="bg-dropdown-container">
+                            <button id="mainBgBtn" class="star-btn" title="Background Options">
+                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                            </button>
+                            <div class="bg-dropdown-menu" id="bgDropdown">
+                                <button id="appBgBtn" class="star-btn" title="Change Panel Background">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                                    </svg>
+                                </button>
+                                <button id="bgBtn" class="star-btn" title="Change Curve Background">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                                        <polyline points="13 2 13 9 20 9"></polyline>
+                                    </svg>
+                                </button>
+                                <button id="clearBgBtn" class="star-btn" title="Clear All Backgrounds" style="color: #ff4d4f;">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <button id="saveBtn" class="star-btn" title="Save Custom Preset">
+                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                </div> <!-- End Mode 1 -->
+
+                <!-- Mode 2: Speed -->
+                <div id="view-speed" class="view-panel">
+                    <div style="flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; color:var(--text-secondary); opacity:0.6; min-height: 200px;">
+                        <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:16px;">
+                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                        </svg>
+                        <p>Speed Editor (Coming Soon)</p>
+                    </div>
+                </div>
+
+                <!-- Mode 3: Bounce -->
+                <div id="view-bounce" class="view-panel">
+                    <div style="flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; color:var(--text-secondary); opacity:0.6; min-height: 200px;">
+                        <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:16px;">
+                            <path d="M22 12c-2.66 0-3.33-4-6-4s-3.33 8-6 8-3.33-4-6-4"></path>
+                        </svg>
+                        <p>Bounce Editor (Coming Soon)</p>
+                    </div>
+                </div>
+            </div> <!-- End view-panels -->
+
+            <!-- Vertical Sidebar (Right) -->
+            <nav class="sidebar">
+                <button class="tab-btn active" data-target="view-value" title="Bezier Value">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18"></path>
+                        <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path>
                     </svg>
                 </button>
-                <div class="bg-dropdown-menu" id="bgDropdown">
-                    <button id="appBgBtn" class="star-btn" title="Change Panel Background">
-                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="3" y1="9" x2="21" y2="9"></line>
-                        </svg>
-                    </button>
-                    <button id="bgBtn" class="star-btn" title="Change Curve Background">
-                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                            <polyline points="13 2 13 9 20 9"></polyline>
-                        </svg>
-                    </button>
-                    <button id="clearBgBtn" class="star-btn" title="Clear All Backgrounds" style="color: #ff4d4f;">
-                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                        </svg>
-                    </button>
-                </div>
+                <button class="tab-btn" data-target="view-speed" title="Speed Graph">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                    </svg>
+                </button>
+                <button class="tab-btn" data-target="view-bounce" title="Bounce / Spring">
+                    <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 12c-2.66 0-3.33-4-6-4s-3.33 8-6 8-3.33-4-6-4"></path>
+                    </svg>
+                </button>
+            </nav>
+        </div> <!-- End Middle Section -->
+
+        <!-- 3. Footer / Presets Area (Static) -->
+        <div class="footer-section">
+            <div class="controls">
+                <button id="getBtn" class="secondary-btn" title="Get Curve from AE">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </button>
+                <button id="applyBtn" class="primary-btn">APPLY EASE</button>
+                <button id="reverseBtn" class="secondary-btn" title="Reverse Curve (In/Out)">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="17 1 21 5 17 9"></polyline>
+                        <line x1="3" y1="5" x2="21" y2="5"></line>
+                        <polyline points="7 23 3 19 7 15"></polyline>
+                        <line x1="21" y1="19" x2="3" y2="19"></line>
+                    </svg>
+                </button>
             </div>
-            <button id="saveBtn" class="star-btn" title="Save Custom Preset">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                </svg>
-            </button>
-        </div>
 
-        <div class="controls">
-            <button id="getBtn" class="secondary-btn" title="Get Curve from AE">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-            </button>
-            <button id="applyBtn" class="primary-btn">APPLY EASE</button>
-            <button id="reverseBtn" class="secondary-btn" title="Reverse Curve (In/Out)">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="17 1 21 5 17 9"></polyline>
-                    <line x1="3" y1="5" x2="21" y2="5"></line>
-                    <polyline points="7 23 3 19 7 15"></polyline>
-                    <line x1="21" y1="19" x2="3" y2="19"></line>
-                </svg>
-            </button>
-        </div>
-
-        <div class="presets-section">
-            <h3>Presets</h3>
-            <div id="presetsGrid" class="presets-grid">
-                <!-- Preset cards will be populated here by JS -->
+            <div class="presets-section">
+                <h3>Presets</h3>
+                <div id="presetsGrid" class="presets-grid">
+                    <!-- Preset cards will be populated here by JS -->
+                </div>
             </div>
         </div>
     </div>

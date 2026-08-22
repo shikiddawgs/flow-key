@@ -370,8 +370,17 @@ confirmSaveBtn.addEventListener('click', () => {
 
     modal.classList.remove('show');
 
+    // Get current mode to tag the preset
+    const activeBtn = document.querySelector('.tab-btn.active');
+    let currentMode = 'value';
+    if (activeBtn) {
+        const target = activeBtn.getAttribute('data-target');
+        if (target) currentMode = target.replace('view-', '');
+    }
+
     const newPreset = {
         name: name,
+        type: currentMode,
         value: [
             parseFloat(p1.x.toFixed(2)),
             parseFloat(p1.y.toFixed(2)),
@@ -531,7 +540,14 @@ async function loadPresets() {
             card.appendChild(label);
 
             card.addEventListener('click', () => {
-                animateCurveTo(pt1, pt2);
+                const targetMode = preset.type || 'value';
+                if (typeof window.switchMode === 'function') {
+                    window.switchMode(targetMode);
+                }
+                
+                if (targetMode === 'value' || targetMode === 'bezier') {
+                    setTimeout(() => animateCurveTo(pt1, pt2), 50);
+                }
             });
 
             grid.appendChild(card);
@@ -713,3 +729,38 @@ if (isCEP && csInterface) {
         }
     });
 }
+
+// --- Sidebar Tab Switching Logic ---
+const tabBtns = document.querySelectorAll('.tab-btn');
+const viewPanels = document.querySelectorAll('.view-panel');
+
+window.switchMode = function(modeName) {
+    const targetId = modeName.startsWith('view-') ? modeName : `view-${modeName}`;
+    
+    // 1. Remove active class from all buttons and panels
+    tabBtns.forEach(b => b.classList.remove('active'));
+    viewPanels.forEach(p => p.classList.remove('active'));
+    
+    // 2. Add active class to corresponding button
+    const targetBtn = Array.from(tabBtns).find(b => b.getAttribute('data-target') === targetId);
+    if (targetBtn) targetBtn.classList.add('active');
+    
+    // 3. Find target panel and activate it
+    const targetPanel = document.getElementById(targetId);
+    if (targetPanel) {
+        targetPanel.classList.add('active');
+        
+        if (targetId === 'view-value') {
+            setTimeout(() => {
+                resizeCanvas();
+                render();
+            }, 50);
+        }
+    }
+};
+
+tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        window.switchMode(btn.getAttribute('data-target'));
+    });
+});

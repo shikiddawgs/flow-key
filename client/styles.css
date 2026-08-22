@@ -26,35 +26,27 @@ body {
 .container {
     display: flex;
     flex-direction: column;
-    padding: clamp(8px, 4vw, 16px);
-    min-height: 100vh;
-    max-width: 480px;
+    padding: clamp(6px, 2vw, 12px);
+    height: 100vh;
+    max-width: 520px;
     margin: 0 auto;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
     background-color: var(--bg-main);
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
     position: relative;
-    overflow-x: hidden;
+    overflow: hidden;
     box-sizing: border-box;
-    gap: clamp(4px, 2vw, 8px);
+    gap: clamp(8px, 2vw, 12px);
 }
 
-/* Styled scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--dynamic-accent); }
-
+/* 1. Header */
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-shrink: 0;
     position: relative;
-    margin-bottom: clamp(6px, 2vw, 12px);
     background-color: rgba(255, 255, 255, 0.05);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -69,9 +61,120 @@ header h1 {
     color: var(--dynamic-accent);
     letter-spacing: 0.5px;
     margin: 0;
-    word-break: break-word; /* Allows text to wrap instead of clipping */
+    word-break: break-word;
     padding-right: clamp(12px, 4vw, 24px);
     padding-left: clamp(12px, 4vw, 24px);
+}
+
+/* 2. Middle Section */
+.middle-section {
+    display: flex;
+    flex-direction: row;
+    flex-shrink: 0;
+    gap: clamp(8px, 2vw, 12px);
+}
+
+.view-panels {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 200px;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 6px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    width: max-content;
+    height: max-content; /* Prevent stretching to full height */
+    flex-shrink: 0;
+    align-items: center;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    width: clamp(28px, 6vw, 36px);
+    height: clamp(28px, 6vw, 36px);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.tab-btn svg {
+    width: clamp(16px, 4vw, 20px);
+    height: clamp(16px, 4vw, 20px);
+}
+
+.tab-btn:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.tab-btn.active {
+    color: white;
+    background-color: var(--dynamic-accent);
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+.content-area {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Prevents flex overflow */
+}
+
+/* View Panels (State Management) */
+.view-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+    pointer-events: none;
+}
+
+.view-panel.active {
+    position: relative;
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Styled scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--dynamic-accent); }
+
+/* Footer Section */
+.footer-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
 .canvas-container {
