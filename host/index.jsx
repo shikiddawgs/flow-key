@@ -102,11 +102,10 @@ function applyEaseToKeyPair(prop, key1Index, key2Index, x1, y1, x2, y2) {
         var easeOutSpeed = (avgSpeed === 0 || x1 === 0) ? 0 : (y1 / x1) * avgSpeed;
         var easeInSpeed = (avgSpeed === 0 || x2 === 1) ? 0 : ((1 - y2) / (1 - x2)) * avgSpeed;
 
-        // Apply the SAME ease to all spatial dimensions
-        for (var d = 0; d < dims; d++) {
-            easeOutArray.push(new KeyframeEase(easeOutSpeed, easeOutInfluence));
-            easeInArray.push(new KeyframeEase(easeInSpeed, easeInInfluence));
-        }
+        // For spatial properties, AE requires exactly ONE KeyframeEase object in the array,
+        // even if it's 2D or 3D Spatial.
+        easeOutArray.push(new KeyframeEase(easeOutSpeed, easeOutInfluence));
+        easeInArray.push(new KeyframeEase(easeInSpeed, easeInInfluence));
     } else {
         // For non-spatial properties, compute per-dimension speed
         for (var d = 0; d < dims; d++) {
@@ -135,4 +134,86 @@ function applyEaseToKeyPair(prop, key1Index, key2Index, x1, y1, x2, y2) {
     // Apply the new temporal eases
     prop.setTemporalEaseAtKey(key1Index, key1InEase, easeOutArray);
     prop.setTemporalEaseAtKey(key2Index, easeInArray, key2OutEase);
+}
+
+/**
+ * Gets the Bezier coordinates of the active (first selected) keyframe.
+ */
+function getFlowFromSelectedKeys() {
+    try {
+        var comp = app.project.activeItem;
+        if (!comp || !(comp instanceof CompItem)) return "error";
+        
+        var selectedProps = comp.selectedProperties;
+        if (!selectedProps || selectedProps.length === 0) return "error";
+
+        var targetProp = null;
+        var keyIndex = -1;
+
+        // Find the first selected property that has selected keyframes
+        for (var i = 0; i < selectedProps.length; i++) {
+            var prop = selectedProps[i];
+            if (prop.canVaryOverTime && prop.selectedKeys && prop.selectedKeys.length > 0) {
+                targetProp = prop;
+                keyIndex = prop.selectedKeys[0];
+                break;
+            }
+        }
+
+        if (!targetProp || keyIndex === -1) return "error";
+        if (keyIndex >= targetProp.numKeys) return "error"; // Need next keyframe to calculate speed
+
+        var time1 = targetProp.keyTime(keyIndex);
+        var time2 = targetProp.keyTime(keyIndex + 1);
+        var val1 = targetProp.keyValue(keyIndex);
+        var val2 = targetProp.keyValue(keyIndex + 1);
+
+        var timeDiff = time2 - time1;
+        if (timeDiff <= 0) return "error";
+
+        var propType = targetProp.propertyValueType;
+        var isSpatial = (propType === PropertyValueType.TwoD_SPATIAL || propType === PropertyValueType.ThreeD_SPATIAL);
+        
+        var valDiff;
+        if (isSpatial) {
+            var distSq = 0;
+            for (var j = 0; j < val1.length; j++) {
+                distSq += Math.pow(val2[j] - val1[j], 2);
+            }
+            valDiff = Math.sqrt(distSq);
+        } else {
+            var v1 = (val1 instanceof Array) ? val1[0] : val1;
+            var v2 = (val2 instanceof Array) ? val2[0] : val2;
+            valDiff = v2 - v1;
+        }
+
+        var avgSpeed = valDiff / timeDiff;
+
+        var easeOut = targetProp.keyOutTemporalEase(keyIndex)[0];
+        var easeIn = targetProp.keyInTemporalEase(keyIndex + 1)[0];
+
+        var x1 = easeOut.influence / 100;
+        var x2 = 1 - (easeIn.influence / 100);
+
+        var y1, y2;
+        if (avgSpeed === 0) {
+            y1 = 0;
+            y2 = 1;
+        } else if (isSpatial) {
+            y1 = x1 * (Math.abs(easeOut.speed) / avgSpeed);
+            y2 = 1 - (1 - x2) * (Math.abs(easeIn.speed) / avgSpeed);
+        } else {
+            y1 = x1 * (easeOut.speed / avgSpeed);
+            y2 = 1 - (1 - x2) * (easeIn.speed / avgSpeed);
+        }
+
+        x1 = Math.max(0, Math.min(1, x1));
+        y1 = Math.max(-0.5, Math.min(1.5, y1));
+        x2 = Math.max(0, Math.min(1, x2));
+        y2 = Math.max(-0.5, Math.min(1.5, y2));
+
+        return x1.toFixed(4) + "," + y1.toFixed(4) + "," + x2.toFixed(4) + "," + y2.toFixed(4);
+    } catch (e) {
+        return "error";
+    }
 }

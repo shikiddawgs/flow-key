@@ -74,10 +74,6 @@ try {
     if (savedColor) accentColor = savedColor;
 } catch (e) { }
 
-// Define global target states to fix spamming reverse during animation
-let targetStateP1 = { x: p1.x, y: p1.y };
-let targetStateP2 = { x: p2.x, y: p2.y };
-
 function animateCurveTo(targetP1, targetP2) {
     if (animationId) cancelAnimationFrame(animationId);
 
@@ -87,12 +83,12 @@ function animateCurveTo(targetP1, targetP2) {
     const startP1 = { x: p1.x, y: p1.y };
     const startP2 = { x: p2.x, y: p2.y };
 
-    const duration = 600; // ms, made slower so it's more visible
+    const duration = 500; // 500ms 
     const startTime = performance.now();
 
-    // Softened easeOutBack for a smaller motion bounce
+    // Mengembalikan efek bounce (easeOutBack)
     const easeOutBack = (t) => {
-        const c1 = 0.9; // Reduced from 1.70158 for a smaller bounce
+        const c1 = 1.2; // Nilai bounce, makin besar makin memantul
         const c3 = c1 + 1;
         return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
     };
@@ -103,15 +99,17 @@ function animateCurveTo(targetP1, targetP2) {
 
         const t = easeOutBack(progress);
 
-        p1.x = startP1.x + (targetP1.x - startP1.x) * t;
-        p1.y = startP1.y + (targetP1.y - startP1.y) * t;
-        p2.x = startP2.x + (targetP2.x - startP2.x) * t;
-        p2.y = startP2.y + (targetP2.y - startP2.y) * t;
+        p1.x = startP1.x + (targetStateP1.x - startP1.x) * t;
+        p1.y = startP1.y + (targetStateP1.y - startP1.y) * t;
+        p2.x = startP2.x + (targetStateP2.x - startP2.x) * t;
+        p2.y = startP2.y + (targetStateP2.y - startP2.y) * t;
 
         render();
 
         if (progress < 1) {
             animationId = requestAnimationFrame(step);
+        } else {
+            animationId = null;
         }
     }
 
@@ -334,73 +332,7 @@ document.getElementById('getBtn').addEventListener('click', () => {
     if (!csInterface) return;
 
     // Call the JSX function to get selected keyframe ease
-    const script = `
-        (function() {
-            var comp = app.project.activeItem;
-            if (!comp) return "error";
-            var layer = comp.selectedLayers[0];
-            if (!layer) return "error";
-            var prop = layer.selectedProperties[0];
-            if (!prop || prop.selectedKeys.length === 0) return "error";
-            
-            var keyIndex = prop.selectedKeys[0];
-            // We need the NEXT keyframe to compute average speed
-            if (keyIndex >= prop.numKeys) return "error";
-            
-            var time1 = prop.keyTime(keyIndex);
-            var time2 = prop.keyTime(keyIndex + 1);
-            var val1 = prop.keyValue(keyIndex);
-            var val2 = prop.keyValue(keyIndex + 1);
-            
-            var timeDiff = time2 - time1;
-            if (timeDiff <= 0) return "error";
-            
-            // Determine if property is spatial
-            var propType = prop.propertyValueType;
-            var isSpatial = (propType === PropertyValueType.TwoD_SPATIAL || propType === PropertyValueType.ThreeD_SPATIAL);
-            
-            var valDiff;
-            if (isSpatial) {
-                var distSq = 0;
-                for (var i = 0; i < val1.length; i++) {
-                    distSq += Math.pow(val2[i] - val1[i], 2);
-                }
-                valDiff = Math.sqrt(distSq);
-            } else {
-                var v1 = (val1 instanceof Array) ? val1[0] : val1;
-                var v2 = (val2 instanceof Array) ? val2[0] : val2;
-                valDiff = v2 - v1;
-            }
-            
-            var avgSpeed = valDiff / timeDiff;
-            
-            var easeOut = prop.keyOutTemporalEase(keyIndex)[0];
-            var easeIn = prop.keyInTemporalEase(keyIndex + 1)[0];
-            
-            var x1 = easeOut.influence / 100;
-            var x2 = 1 - (easeIn.influence / 100);
-            
-            var y1, y2;
-            if (avgSpeed === 0) {
-                y1 = 0;
-                y2 = 1;
-            } else if (isSpatial) {
-                y1 = x1 * (Math.abs(easeOut.speed) / avgSpeed);
-                y2 = 1 - (1 - x2) * (Math.abs(easeIn.speed) / avgSpeed);
-            } else {
-                y1 = x1 * (easeOut.speed / avgSpeed);
-                y2 = 1 - (1 - x2) * (easeIn.speed / avgSpeed);
-            }
-            
-            // Clamp to reasonable range
-            x1 = Math.max(0, Math.min(1, x1));
-            y1 = Math.max(-0.5, Math.min(1.5, y1));
-            x2 = Math.max(0, Math.min(1, x2));
-            y2 = Math.max(-0.5, Math.min(1.5, y2));
-            
-            return x1.toFixed(4) + "," + y1.toFixed(4) + "," + x2.toFixed(4) + "," + y2.toFixed(4);
-        })()
-    `;
+    const script = `getFlowFromSelectedKeys()`;
 
     csInterface.evalScript(script, (result) => {
         if (result && result !== "error" && result !== "undefined") {
