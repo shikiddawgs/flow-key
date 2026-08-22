@@ -11,15 +11,6 @@
 <body>
     <div class="container">
         <!-- 1. Header (Static) -->
-        <header style="position: relative;">
-            <h1>Flow Clone</h1>
-            <button id="clearAppBgBtn" class="star-btn" title="Clear Panel Background" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #ff4d4f; width: 24px; height: 24px; padding: 4px;">
-                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-            </button>
-        </header>
 
         <!-- 2. Middle Section (Dynamic) -->
         <div class="middle-section">
@@ -30,11 +21,12 @@
                         <div id="canvasBg"></div>
                         <canvas id="bezierCanvas"></canvas>
                         <input type="file" id="appBgInput" accept="image/*" style="display: none;">
-                        <input type="file" id="bgInput" accept="image/*" style="display: none;">
+                        <input type="file" id="bgInput" accept="image/*, image/gif" style="display: none;">
                     </div>
                     
                     <div class="coord-row">
-                        <input type="color" id="colorPicker" class="color-picker-btn" value="#1890ff" title="Change Accent Color">
+                        <button id="colorPickerBtn" class="color-picker-btn" style="background-color: #1890ff; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px;" title="Change Accent Color"></button>
+                        <input type="color" id="hiddenColorInput" value="#1890ff" style="position: fixed; bottom: 0; left: 50%; opacity: 0; pointer-events: none; width: 1px; height: 1px; margin: 0; padding: 0; border: none;">
                         <div id="coordinateDisplay">0.42, 0.00, 0.58, 1.00</div>
                         
                         <div class="bg-dropdown-container">
@@ -97,6 +89,13 @@
 
             <!-- Vertical Sidebar (Right) -->
             <nav class="sidebar">
+                <button id="clearAppBgBtn" class="tab-btn" title="Clear Panel Background" style="color: #ff4d4f;">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+                <div style="width: 70%; height: 1px; background: rgba(255,255,255,0.1); margin: 2px auto 6px auto;"></div>
                 <button class="tab-btn active" data-target="view-value" title="Bezier Value">
                     <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 3v18h18"></path>

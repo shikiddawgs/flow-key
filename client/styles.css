@@ -10,6 +10,9 @@
     --dynamic-accent: #1890ff;
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
+html {
+    height: 100%;
+}
 
 body {
     background-color: var(--bg-main);
@@ -17,9 +20,9 @@ body {
     font-family: var(--font-family);
     font-size: clamp(11px, 3.5vw, 14px);
     overflow-x: hidden;
-    overflow-y: auto;
+    overflow-y: hidden;
     user-select: none;
-    min-height: 100vh;
+    height: 100%;
     margin: 0;
 }
 
@@ -27,7 +30,7 @@ body {
     display: flex;
     flex-direction: column;
     padding: clamp(6px, 2vw, 12px);
-    height: 100vh;
+    height: 100%;
     max-width: 520px;
     margin: 0 auto;
     background-color: var(--bg-main);
@@ -178,8 +181,9 @@ header h1 {
 }
 
 .canvas-container {
-    background-color: rgba(26, 26, 28, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(26, 26, 28, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
     border-radius: clamp(12px, 4vw, 24px);
     display: flex;
     position: relative;

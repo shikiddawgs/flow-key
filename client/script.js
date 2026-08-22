@@ -618,15 +618,55 @@ const appBgBtn = document.getElementById('appBgBtn');
 const appBgInput = document.getElementById('appBgInput');
 const appContainer = document.querySelector('.container');
 
+let fs = null;
+let path = null;
+let userDataDir = "";
+if (isCEP) {
+    try {
+        fs = require('fs');
+        path = require('path');
+        const extPath = csInterface.getSystemPath(SystemPath.EXTENSION);
+        userDataDir = path.join(extPath, 'userData');
+        if (!fs.existsSync(userDataDir)) {
+            fs.mkdirSync(userDataDir);
+        }
+    } catch(e) { }
+}
+
+function saveLongData(key, dataUrl) {
+    if (fs && path && userDataDir) {
+        try { fs.writeFileSync(path.join(userDataDir, key + '.txt'), dataUrl, 'utf8'); return; } catch(e) {}
+    }
+    try { localStorage.setItem(key, dataUrl); } catch(err) {
+        console.warn("Storage full.");
+        const toast = document.getElementById('toast');
+        if (toast) { toast.innerText = "Error: File too large to save! Use < 3MB"; toast.style.backgroundColor = "#ff4d4f"; toast.classList.add('show'); setTimeout(() => { toast.classList.remove('show'); toast.style.backgroundColor = "var(--dynamic-accent)"; }, 3000); }
+    }
+}
+
+function loadLongData(key) {
+    if (fs && path && userDataDir) {
+        try { const fp = path.join(userDataDir, key + '.txt'); if (fs.existsSync(fp)) return fs.readFileSync(fp, 'utf8'); } catch(e) {}
+    }
+    return localStorage.getItem(key);
+}
+
+function removeLongData(key) {
+    if (fs && path && userDataDir) {
+        try { const fp = path.join(userDataDir, key + '.txt'); if (fs.existsSync(fp)) fs.unlinkSync(fp); } catch(e) {}
+    }
+    try { localStorage.removeItem(key); } catch(e) {}
+}
+
 try {
-    const storedBg = localStorage.getItem('flowCustomBg');
+    const storedBg = loadLongData('flowCustomBg');
     if (storedBg && canvasBg) {
         canvasBg.style.backgroundImage = `linear-gradient(rgba(30, 30, 30, 0.3), rgba(30, 30, 30, 0.3)), url(${storedBg})`;
         canvasBg.style.opacity = '0.5';
         const cCont = document.querySelector('.canvas-container');
         if (cCont) { cCont.style.backdropFilter = 'blur(16px)'; cCont.style.webkitBackdropFilter = 'blur(16px)'; }
     }
-    const storedAppBg = localStorage.getItem('flowAppBg');
+    const storedAppBg = loadLongData('flowAppBg');
     if (storedAppBg && appContainer) {
         appContainer.style.backgroundImage = `linear-gradient(rgba(26, 26, 28, 0.70), rgba(26, 26, 28, 0.70)), url(${storedAppBg})`;
     }
@@ -643,11 +683,7 @@ if (appBgBtn && appBgInput) {
         reader.onload = function (evt) {
             const dataUrl = evt.target.result;
             if (appContainer) appContainer.style.backgroundImage = `linear-gradient(rgba(26, 26, 28, 0.75), rgba(26, 26, 28, 0.75)), url(${dataUrl})`;
-            try {
-                localStorage.setItem('flowAppBg', dataUrl);
-            } catch (err) {
-                console.warn("Image too large for localStorage.");
-            }
+            saveLongData('flowAppBg', dataUrl);
         };
         reader.readAsDataURL(file);
     });
@@ -669,31 +705,55 @@ if (bgBtn && bgInput) {
             canvasBg.style.opacity = '0.5';
             const cCont = document.querySelector('.canvas-container');
             if (cCont) { cCont.style.backdropFilter = 'blur(16px)'; cCont.style.webkitBackdropFilter = 'blur(16px)'; }
-            try {
-                localStorage.setItem('flowCustomBg', dataUrl);
-            } catch (err) {
-                console.warn("Image too large for localStorage.");
-            }
+            saveLongData('flowCustomBg', dataUrl);
         };
         reader.readAsDataURL(file);
     });
 }
 
-const colorPicker = document.getElementById('colorPicker');
-if (colorPicker) {
-    colorPicker.value = accentColor;
+const colorPickerBtn = document.getElementById('colorPickerBtn');
+const hiddenColorInput = document.getElementById('hiddenColorInput');
+
+if (colorPickerBtn && hiddenColorInput) {
+    colorPickerBtn.style.backgroundColor = accentColor;
+    hiddenColorInput.value = accentColor;
     document.documentElement.style.setProperty('--dynamic-accent', accentColor);
 
-    colorPicker.addEventListener('input', (e) => {
-        accentColor = e.target.value;
+    function updateColor(newColor) {
+        accentColor = newColor;
+        colorPickerBtn.style.backgroundColor = accentColor;
+        hiddenColorInput.value = accentColor;
         document.documentElement.style.setProperty('--dynamic-accent', accentColor);
         render();
-    });
+    }
 
-    colorPicker.addEventListener('change', (e) => {
-        accentColor = e.target.value;
+    function saveColor(newColor) {
+        updateColor(newColor);
         try { localStorage.setItem('flowAccentColor', accentColor); } catch (err) { }
         loadPresets();
+    }
+
+    colorPickerBtn.addEventListener('click', async () => {
+        if ('EyeDropper' in window) {
+            try {
+                const eyeDropper = new EyeDropper();
+                const result = await eyeDropper.open();
+                saveColor(result.sRGBHex);
+            } catch (err) {
+                // User canceled the eyedropper, do nothing
+            }
+        } else {
+            // Fallback for CEP/Browsers that don't support EyeDropper
+            hiddenColorInput.click();
+        }
+    });
+
+    hiddenColorInput.addEventListener('input', (e) => {
+        updateColor(e.target.value);
+    });
+
+    hiddenColorInput.addEventListener('change', (e) => {
+        saveColor(e.target.value);
     });
 }
 
@@ -732,7 +792,7 @@ if (saveBtn) {
 const clearBgBtn = document.getElementById('clearBgBtn');
 if (clearBgBtn) {
     clearBgBtn.addEventListener('click', () => {
-        try { localStorage.removeItem('flowCustomBg'); } catch (e) { }
+        removeLongData('flowCustomBg');
         if (canvasBg) {
             canvasBg.style.backgroundImage = 'none';
             canvasBg.style.opacity = '0.5';
@@ -748,7 +808,7 @@ if (clearBgBtn) {
 const clearAppBgBtn = document.getElementById('clearAppBgBtn');
 if (clearAppBgBtn) {
     clearAppBgBtn.addEventListener('click', () => {
-        try { localStorage.removeItem('flowAppBg'); } catch (e) { }
+        removeLongData('flowAppBg');
         if (appContainer) appContainer.style.backgroundImage = 'none';
     });
 }

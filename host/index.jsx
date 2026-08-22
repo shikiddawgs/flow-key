@@ -297,3 +297,26 @@ function applySpeedToKeyPair(prop, key1Index, key2Index, speedOut, influenceOut,
     prop.setTemporalEaseAtKey(key1Index, key1InEase, easeOutArray);
     prop.setTemporalEaseAtKey(key2Index, easeInArray, key2OutEase);
 }
+
+/**
+ * Opens AE's native color picker which supports the eyedropper outside CEF.
+ */
+function getAEColorPicker(hexColor) {
+    try {
+        var initialColor = 0;
+        if (hexColor && hexColor.indexOf("#") !== -1) {
+            initialColor = parseInt(hexColor.replace("#", ""), 16);
+        }
+        var pickedColor = $.colorPicker(initialColor);
+        if (pickedColor === -1) {
+            return "CANCELLED";
+        }
+        var hexOut = pickedColor.toString(16);
+        while (hexOut.length < 6) {
+            hexOut = "0" + hexOut;
+        }
+        return "#" + hexOut;
+    } catch(e) {
+        return "ERROR";
+    }
+}
