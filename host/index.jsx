@@ -217,3 +217,83 @@ function getFlowFromSelectedKeys() {
         return "error";
     }
 }
+
+/**
+ * Applies direct Speed and Influence to selected keyframes (Speed Graph Mode).
+ * Handle 1 (Left) = Out Ease (applied to key1)
+ * Handle 2 (Right) = In Ease (applied to key2)
+ */
+
+
+function applySpeedToKeyPair(prop, key1Index, key2Index, speedOut, influenceOut, speedIn, influenceIn) {
+    var time1 = prop.keyTime(key1Index);
+    var time2 = prop.keyTime(key2Index);
+    var val1 = prop.keyValue(key1Index);
+    var val2 = prop.keyValue(key2Index);
+    
+    var timeDiff = time2 - time1;
+    if (timeDiff <= 0) return;
+
+    var propType = prop.propertyValueType;
+    var dims = 1;
+    var isSpatial = false;
+    
+    if (propType === PropertyValueType.TwoD_SPATIAL) { dims = 2; isSpatial = true; }
+    else if (propType === PropertyValueType.ThreeD_SPATIAL) { dims = 3; isSpatial = true; }
+    else if (propType === PropertyValueType.TwoD) dims = 2;
+    else if (propType === PropertyValueType.ThreeD) dims = 3;
+    else if (propType === PropertyValueType.COLOR) dims = 4;
+
+    var easeOutArray = [];
+    var easeInArray = [];
+
+    // Ensure influence is clamped between 0.1 and 100
+    influenceIn = Math.max(0.1, Math.min(100, influenceIn));
+    influenceOut = Math.max(0.1, Math.min(100, influenceOut));
+
+    if (isSpatial) {
+        // Calculate average speed for spatial path
+        var distSq = 0;
+        for (var d = 0; d < dims; d++) {
+            distSq += Math.pow(val2[d] - val1[d], 2);
+        }
+        var totalDist = Math.sqrt(distSq);
+        var avgSpeed = totalDist / timeDiff;
+
+        // Map UI speed (0-100) to actual pixels/sec. 50 UI = 1x avgSpeed.
+        var actualSpeedOut = (speedOut / 50) * avgSpeed;
+        var actualSpeedIn = (speedIn / 50) * avgSpeed;
+
+        easeOutArray.push(new KeyframeEase(actualSpeedOut, influenceOut));
+        easeInArray.push(new KeyframeEase(actualSpeedIn, influenceIn));
+    } else {
+        // Non-spatial properties need an array of KeyframeEase equal to their dimension
+        for (var d = 0; d < dims; d++) {
+            var v1 = (dims === 1) ? val1 : val1[d];
+            var v2 = (dims === 1) ? val2 : val2[d];
+            var valDiff = v2 - v1;
+            var avgSpeed = valDiff / timeDiff;
+
+            var actualSpeedOut = (speedOut / 50) * Math.abs(avgSpeed);
+            var actualSpeedIn = (speedIn / 50) * Math.abs(avgSpeed);
+            
+            // If the value is decreasing, AE needs negative speed
+            if (valDiff < 0) {
+                actualSpeedOut = -actualSpeedOut;
+                actualSpeedIn = -actualSpeedIn;
+            }
+
+            easeOutArray.push(new KeyframeEase(actualSpeedOut, influenceOut));
+            easeInArray.push(new KeyframeEase(actualSpeedIn, influenceIn));
+        }
+    }
+
+    prop.setInterpolationTypeAtKey(key1Index, prop.keyInInterpolationType(key1Index), KeyframeInterpolationType.BEZIER);
+    prop.setInterpolationTypeAtKey(key2Index, KeyframeInterpolationType.BEZIER, prop.keyOutInterpolationType(key2Index));
+
+    var key1InEase = prop.keyInTemporalEase(key1Index);
+    var key2OutEase = prop.keyOutTemporalEase(key2Index);
+
+    prop.setTemporalEaseAtKey(key1Index, key1InEase, easeOutArray);
+    prop.setTemporalEaseAtKey(key2Index, easeInArray, key2OutEase);
+}

@@ -29,13 +29,31 @@ function getCanvasDimensions() {
 
 // Resize canvas to match its displayed CSS size (keeps rendering crisp)
 function resizeCanvas() {
+    // Resize Bezier Canvas
     const container = canvas.parentElement;
-    const rect = container.getBoundingClientRect();
-    const size = Math.max(Math.floor(Math.min(rect.width, rect.height)), 60);
-    if (canvas.width !== size || canvas.height !== size) {
-        canvas.width = size;
-        canvas.height = size;
-        render();
+    if (container) {
+        const rect = container.getBoundingClientRect();
+        const size = Math.max(Math.floor(Math.min(rect.width, rect.height)), 60);
+        if (canvas.width !== size || canvas.height !== size) {
+            canvas.width = size;
+            canvas.height = size;
+            render();
+        }
+    }
+
+    // Resize Speed Canvas
+    const speedCanvas = document.getElementById('speedCanvas');
+    if (speedCanvas) {
+        const speedContainer = speedCanvas.parentElement;
+        if (speedContainer) {
+            const speedRect = speedContainer.getBoundingClientRect();
+            const speedSize = Math.max(Math.floor(Math.min(speedRect.width, speedRect.height)), 60);
+            if (speedCanvas.width !== speedSize || speedCanvas.height !== speedSize) {
+                speedCanvas.width = speedSize;
+                speedCanvas.height = speedSize;
+                if (typeof renderSpeed === 'function') renderSpeed();
+            }
+        }
     }
 }
 
@@ -290,28 +308,41 @@ canvas.addEventListener('pointercancel', (e) => {
     try { canvas.releasePointerCapture(e.pointerId); } catch (err) { }
 });
 
+// Speed Canvas Logic Removed
+
 // --- Actions & API Calls ---
 document.getElementById('applyBtn').addEventListener('click', () => {
+    // Determine active mode
+    const activeBtn = document.querySelector('.tab-btn.active');
+    let currentMode = 'value';
+    if (activeBtn) {
+        const target = activeBtn.getAttribute('data-target');
+        if (target) currentMode = target.replace('view-', '');
+    }
+
     if (!isCEP) {
-        console.log(`[MOCK MODE] Apply Ease: p1(${p1.x.toFixed(4)}, ${p1.y.toFixed(4)}) p2(${p2.x.toFixed(4)}, ${p2.y.toFixed(4)})`);
-        const toast = document.getElementById('toast');
-        if (toast) {
-            toast.innerText = "Mock Apply (Browser)";
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2000);
-        }
+        console.log(`[MOCK MODE] Apply ${currentMode}`);
         return;
     }
     if (!csInterface) return;
 
-    // Call the JSX function
-    const script = `applyFlowToSelectedKeys(${p1.x}, ${p1.y}, ${p2.x}, ${p2.y})`;
+    if (currentMode === 'speed') {
+        // Mode ini di-disabled seperti yang diminta
+        return;
+    } else {
+        applyBezier();
+    }
+});
+
+function applyBezier() {
+    let script = `applyFlowToSelectedKeys(${p1.x}, ${p1.y}, ${p2.x}, ${p2.y})`;
     csInterface.evalScript(script, (result) => {
-        if (result === "false" || result === "error") {
-            console.error("Failed to apply easing.");
+        if (result === "false" || result === "error" || result === "undefined" || result === "EvalScript error.") {
+            console.error("Failed to apply bezier easing. Result:", result);
+            alert("APPLY ERROR: " + result);
         }
     });
-});
+}
 
 document.getElementById('reverseBtn').addEventListener('click', () => {
     // Reverse/Swap In and Out using targetState to prevent shrinking during animation spam
@@ -378,15 +409,27 @@ confirmSaveBtn.addEventListener('click', () => {
         if (target) currentMode = target.replace('view-', '');
     }
 
-    const newPreset = {
-        name: name,
-        type: currentMode,
-        value: [
+    let presetValue = [];
+    if (currentMode === 'speed') {
+        presetValue = [
+            parseFloat(sp1.speed.toFixed(2)),
+            parseFloat(sp1.influence.toFixed(2)),
+            parseFloat(sp2.speed.toFixed(2)),
+            parseFloat(sp2.influence.toFixed(2))
+        ];
+    } else {
+        presetValue = [
             parseFloat(p1.x.toFixed(2)),
             parseFloat(p1.y.toFixed(2)),
             parseFloat(p2.x.toFixed(2)),
             parseFloat(p2.y.toFixed(2))
-        ]
+        ];
+    }
+
+    const newPreset = {
+        name: name,
+        type: currentMode,
+        value: presetValue
     };
 
     let customPresets = [];
@@ -750,7 +793,7 @@ window.switchMode = function(modeName) {
     if (targetPanel) {
         targetPanel.classList.add('active');
         
-        if (targetId === 'view-value') {
+        if (targetId === 'value' || targetId === 'view-value') {
             setTimeout(() => {
                 resizeCanvas();
                 render();
