@@ -86,6 +86,50 @@ let p2 = { x: 0.58, y: 1.0 };
 let activeHandle = null;
 let animationId = null;
 
+// Target state untuk tracking posisi akhir (mencegah shrink saat animasi spam)
+let targetStateP1 = { x: p1.x, y: p1.y };
+let targetStateP2 = { x: p2.x, y: p2.y };
+
+// Bounce effect untuk control point handles + kurva
+let handleBounceScale = 1.0;
+let curveBounceScale = 1.0;
+let bounceAnimId = null;
+
+function bounceHandles() {
+    if (bounceAnimId) cancelAnimationFrame(bounceAnimId);
+
+    const bounceDuration = 400; // ms
+    const bounceStart = performance.now();
+
+    function bounceStep(now) {
+        const elapsed = now - bounceStart;
+        const progress = Math.min(elapsed / bounceDuration, 1);
+
+        // Spring bounce: overshoot then settle back to 1.0
+        const decay = Math.exp(-4 * progress);
+        const oscillation = Math.sin(progress * Math.PI * 2.5);
+
+        // Handle dots bounce (lebih besar)
+        handleBounceScale = 1.0 + 0.45 * decay * oscillation;
+
+        // Kurva line bounce (lebih subtle, ketebalan garis mantul)
+        curveBounceScale = 1.0 + 0.35 * decay * oscillation;
+
+        render();
+
+        if (progress < 1) {
+            bounceAnimId = requestAnimationFrame(bounceStep);
+        } else {
+            handleBounceScale = 1.0;
+            curveBounceScale = 1.0;
+            bounceAnimId = null;
+            render();
+        }
+    }
+
+    bounceAnimId = requestAnimationFrame(bounceStep);
+}
+
 let accentColor = '#1890ff';
 try {
     const savedColor = localStorage.getItem('flowAccentColor');
@@ -94,6 +138,9 @@ try {
 
 function animateCurveTo(targetP1, targetP2) {
     if (animationId) cancelAnimationFrame(animationId);
+    if (bounceAnimId) cancelAnimationFrame(bounceAnimId);
+    handleBounceScale = 1.0;
+    curveBounceScale = 1.0;
 
     targetStateP1 = { x: targetP1.x, y: targetP1.y };
     targetStateP2 = { x: targetP2.x, y: targetP2.y };
@@ -101,12 +148,13 @@ function animateCurveTo(targetP1, targetP2) {
     const startP1 = { x: p1.x, y: p1.y };
     const startP2 = { x: p2.x, y: p2.y };
 
-    const duration = 500; // 500ms 
+    const duration = 450; // 450ms — smooth with gentle bounce
+
     const startTime = performance.now();
 
-    // Mengembalikan efek bounce (easeOutBack)
+    // Gentle easeOutBack — sedikit overshoot biar mantul halus
     const easeOutBack = (t) => {
-        const c1 = 1.2; // Nilai bounce, makin besar makin memantul
+        const c1 = 0.5; // Subtle bounce, ga terlalu kenceng
         const c3 = c1 + 1;
         return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
     };
@@ -128,6 +176,8 @@ function animateCurveTo(targetP1, targetP2) {
             animationId = requestAnimationFrame(step);
         } else {
             animationId = null;
+            // Trigger bounce pada titik bulet setelah kurva selesai bergerak
+            bounceHandles();
         }
     }
 
@@ -193,16 +243,18 @@ function render() {
     ctx.lineTo(cP2.x, cP2.y);
     ctx.stroke();
 
-    // Draw bezier curve (thick white)
+    // Draw bezier curve (thick white) — with bounce scale
+    const baseCurveWidth = Math.max(3, 7 * scale);
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = Math.max(3, 7 * scale); ctx.lineCap = 'round';
+    ctx.lineWidth = baseCurveWidth * curveBounceScale; ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(cP0.x, cP0.y);
     ctx.bezierCurveTo(cP1.x, cP1.y, cP2.x, cP2.y, cP3.x, cP3.y);
     ctx.stroke();
 
-    // Draw control point handles (blue circles with white border)
-    const handleRadius = Math.max(4, 6 * scale);
+    // Draw control point handles (blue circles with white border) — with bounce scale
+    const baseHandleRadius = Math.max(4, 6 * scale);
+    const handleRadius = baseHandleRadius * handleBounceScale;
     ctx.fillStyle = accentColor;
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = Math.max(1.5, 2 * scale);
@@ -242,6 +294,10 @@ function getDist(pA, pB) {
 
 canvas.addEventListener('pointerdown', (e) => {
     if (animationId) cancelAnimationFrame(animationId);
+    if (bounceAnimId) cancelAnimationFrame(bounceAnimId);
+    handleBounceScale = 1.0;
+    curveBounceScale = 1.0;
+    render();
 
     const mousePos = getMousePos(e);
     const { height, padding, drawWidth, drawHeight } = getCanvasDimensions();
