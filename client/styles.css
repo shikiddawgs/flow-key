@@ -10,6 +10,7 @@
     --dynamic-accent: #1890ff;
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
+
 html {
     height: 100%;
 }
@@ -96,7 +97,8 @@ header h1 {
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
     width: max-content;
-    height: max-content; /* Prevent stretching to full height */
+    height: max-content;
+    /* Prevent stretching to full height */
     flex-shrink: 0;
     align-items: center;
     backdrop-filter: blur(8px);
@@ -139,7 +141,8 @@ header h1 {
     position: relative;
     display: flex;
     flex-direction: column;
-    min-width: 0; /* Prevents flex overflow */
+    min-width: 0;
+    /* Prevents flex overflow */
 }
 
 /* View Panels (State Management) */
@@ -167,10 +170,22 @@ header h1 {
 }
 
 /* Styled scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--dynamic-accent); }
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--dynamic-accent);
+}
 
 /* Footer Section */
 .footer-section {
@@ -199,7 +214,10 @@ header h1 {
 
 #canvasBg {
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-size: cover;
     background-position: center;
     border-radius: inherit;
@@ -238,6 +256,7 @@ header h1 {
 .color-picker-btn::-webkit-color-swatch-wrapper {
     padding: 0;
 }
+
 .color-picker-btn::-webkit-color-swatch {
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 6px;
@@ -253,7 +272,8 @@ header h1 {
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.05);
     letter-spacing: 0.5px;
-    min-width: 0; /* Prevents overflow */
+    min-width: 0;
+    /* Prevents overflow */
 }
 
 .controls {
@@ -263,7 +283,9 @@ header h1 {
     flex-shrink: 0;
 }
 
-.primary-btn, .secondary-btn, .star-btn {
+.primary-btn,
+.secondary-btn,
+.star-btn {
     border: none;
     border-radius: 8px;
     font-weight: 600;
@@ -305,7 +327,8 @@ header h1 {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
-.secondary-btn svg, .star-btn svg {
+.secondary-btn svg,
+.star-btn svg {
     width: clamp(12px, 4vw, 16px);
     height: clamp(12px, 4vw, 16px);
 }
@@ -410,7 +433,7 @@ header h1 {
     cursor: pointer;
     opacity: 0;
     transition: all 0.2s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     z-index: 2;
 }
 
@@ -438,7 +461,7 @@ header h1 {
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     pointer-events: none;
     z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .toast.show {
@@ -449,7 +472,10 @@ header h1 {
 .modal {
     display: none;
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background-color: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
@@ -472,7 +498,7 @@ header h1 {
     border: 1px solid rgba(255, 255, 255, 0.1);
     width: 90%;
     max-width: min(260px, 85vw);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .modal-content h4 {
@@ -529,7 +555,7 @@ header h1 {
     border-radius: 12px;
     padding: 4px;
     gap: 4px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
     visibility: hidden;
     opacity: 0;
     transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);

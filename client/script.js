@@ -82,6 +82,26 @@ const p3 = { x: 1, y: 1 };
 let p1 = { x: 0.42, y: 0.0 };
 let p2 = { x: 0.58, y: 1.0 };
 
+try {
+    const savedCurve = localStorage.getItem('flowLastCurve');
+    if (savedCurve) {
+        const parsed = JSON.parse(savedCurve);
+        if (parsed && typeof parsed.p1x === 'number') {
+            p1.x = parsed.p1x; p1.y = parsed.p1y;
+            p2.x = parsed.p2x; p2.y = parsed.p2y;
+        }
+    }
+} catch (e) {}
+
+function saveCurrentCurve() {
+    try {
+        localStorage.setItem('flowLastCurve', JSON.stringify({
+            p1x: p1.x, p1y: p1.y,
+            p2x: p2.x, p2y: p2.y
+        }));
+    } catch (e) {}
+}
+
 // Dragging state
 let activeHandle = null;
 let animationId = null;
@@ -178,6 +198,7 @@ function animateCurveTo(targetP1, targetP2) {
             animationId = null;
             // Trigger bounce pada titik bulet setelah kurva selesai bergerak
             bounceHandles();
+            saveCurrentCurve();
         }
     }
 
@@ -277,6 +298,8 @@ function updateCoordinateDisplay() {
 }
 
 // --- Mouse Interaction ---
+let dragOffset = { x: 0, y: 0 };
+
 function getMousePos(evt) {
     const rect = canvas.getBoundingClientRect();
     // Scale from CSS display size to internal canvas resolution
@@ -293,16 +316,18 @@ function getDist(pA, pB) {
 }
 
 canvas.addEventListener('pointerdown', (e) => {
-    if (animationId) cancelAnimationFrame(animationId);
-    if (bounceAnimId) cancelAnimationFrame(bounceAnimId);
+    // 1. Clear active bounces
+    if (bounceAnimId) {
+        cancelAnimationFrame(bounceAnimId);
+        bounceAnimId = null;
+    }
     handleBounceScale = 1.0;
     curveBounceScale = 1.0;
-    render();
 
     const mousePos = getMousePos(e);
     const { height, padding, drawWidth, drawHeight } = getCanvasDimensions();
 
-    // Convert current normalized P1, P2 to canvas space for distance check
+    // 2. Map current p1/p2 to canvas space for distance check
     const toCanvasX = (nx) => padding + nx * drawWidth;
     const toCanvasY = (ny) => height - padding - ny * drawHeight;
 
@@ -315,15 +340,40 @@ canvas.addEventListener('pointerdown', (e) => {
     // Scale hit area proportionally
     const hitArea = Math.max(20, 30 * (Math.min(canvas.width, canvas.height) / 280));
 
-    if (dist1 < hitArea) { // Increased hit area for easier clicking/touching
+    let hit = 0;
+    if (dist1 < hitArea) hit = 1;
+    else if (dist2 < hitArea) hit = 2;
+
+    // 3. If there was a running animation, cancel it and snap to its final target state
+    // so handles don't get stuck midway if you rapidly click and drag.
+    if (animationId) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+        p1.x = targetStateP1.x;
+        p1.y = targetStateP1.y;
+        p2.x = targetStateP2.x;
+        p2.y = targetStateP2.y;
+    }
+
+    // 4. Calculate mouse normalized position
+    let nx = (mousePos.x - padding) / drawWidth;
+    let ny = (height - padding - mousePos.y) / drawHeight;
+
+    if (hit === 1) {
         activeHandle = 1;
+        dragOffset.x = p1.x - nx;
+        dragOffset.y = p1.y - ny;
         canvas.setPointerCapture(e.pointerId);
         e.preventDefault();
-    } else if (dist2 < hitArea) {
+    } else if (hit === 2) {
         activeHandle = 2;
+        dragOffset.x = p2.x - nx;
+        dragOffset.y = p2.y - ny;
         canvas.setPointerCapture(e.pointerId);
         e.preventDefault();
     }
+
+    render();
 });
 
 canvas.addEventListener('pointermove', (e) => {
@@ -332,9 +382,12 @@ canvas.addEventListener('pointermove', (e) => {
     const mousePos = getMousePos(e);
     const { height, padding, drawWidth, drawHeight } = getCanvasDimensions();
 
-    // Map mouse position back to normalized coordinates
+    // Map mouse position back to normalized coordinates and apply drag offset
     let nx = (mousePos.x - padding) / drawWidth;
     let ny = (height - padding - mousePos.y) / drawHeight;
+
+    nx += dragOffset.x;
+    ny += dragOffset.y;
 
     // Clamp X between 0 and 1
     nx = Math.max(0, Math.min(1, nx));
@@ -355,11 +408,13 @@ canvas.addEventListener('pointermove', (e) => {
 });
 
 canvas.addEventListener('pointerup', (e) => {
+    if (activeHandle) saveCurrentCurve();
     activeHandle = null;
     try { canvas.releasePointerCapture(e.pointerId); } catch (err) { }
 });
 
 canvas.addEventListener('pointercancel', (e) => {
+    if (activeHandle) saveCurrentCurve();
     activeHandle = null;
     try { canvas.releasePointerCapture(e.pointerId); } catch (err) { }
 });
