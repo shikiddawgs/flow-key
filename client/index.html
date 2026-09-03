@@ -9,8 +9,11 @@
     <script src="CSInterface.js"></script>
 </head>
 <body>
-    <div class="container">
-        <!-- 1. Header (Static) -->
+    <div class="app-container">
+        <!-- PANEL 1: Keyframe Flow -->
+        <div class="panel-view active-view" id="view-keyframe">
+            <div class="container">
+                <!-- 1. Header (Static) -->
 
         <!-- 2. Middle Section (Dynamic) -->
         <div class="middle-section">
@@ -142,7 +145,162 @@
                     <!-- Preset cards will be populated here by JS -->
                 </div>
             </div>
+            </div>
         </div>
+
+        </div>
+        
+        <!-- PANEL 2: Hyper Speed V2 -->
+        <div class="panel-view" id="view-hyperspeed">
+            <div class="container hs-container">
+                
+                <!-- Header -->
+                <div class="hs-header">
+                    <div class="hs-title">
+                        <h2>HYPER SPEED V2</h2>
+                    </div>
+                </div>
+
+                <div class="hs-scroll-area">
+                    <!-- Section 1: LAYER CREATION -->
+                    <div class="hs-section">
+                        <div class="hs-section-title">LAYER CREATION</div>
+                        <div class="hs-grid hs-grid-3">
+                            <button class="hs-card">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect></svg>
+                                <span>Null</span>
+                            </button>
+                            <button class="hs-card">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                                <span>Adj Layer</span>
+                            </button>
+                            <button class="hs-card">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none" stroke-dasharray="4 4"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect></svg>
+                                <span>Solid</span>
+                            </button>
+                            <button class="hs-card">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                                <span>Camera</span>
+                            </button>
+                            <button class="hs-card active-pink">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+                                <span>Text</span>
+                            </button>
+                            <button class="hs-card">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none"><polyline points="4 14 4 20 10 20"></polyline><polyline points="20 10 20 4 14 4"></polyline><polyline points="14 20 20 20 20 14"></polyline><polyline points="10 4 4 4 4 10"></polyline></svg>
+                                <span>Fit to Comp</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: QUICK SHAPE TOOLS -->
+                    <div class="hs-section">
+                        <div class="hs-section-title">QUICK SHAPE TOOLS</div>
+                        <div class="hs-grid hs-grid-3">
+                            <button class="hs-card">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="4" y="4" width="16" height="16"></rect></svg>
+                                <span>Rectangle</span>
+                            </button>
+                            <button class="hs-card">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none"><rect x="4" y="4" width="16" height="16" rx="4" ry="4"></rect></svg>
+                                <span>Rounded</span>
+                            </button>
+                            <button class="hs-card">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none"><circle cx="12" cy="12" r="8"></circle></svg>
+                                <span>Ellipse</span>
+                            </button>
+                            <button class="hs-card">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon></svg>
+                                <span>Polygon</span>
+                            </button>
+                            <button class="hs-card">
+                                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5" fill="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                <span>Star</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: TRANSFORM & ANCHOR -->
+                    <div class="hs-section">
+                        <div class="hs-section-title">TRANSFORM & ANCHOR</div>
+                        <div class="hs-panel">
+                            <div class="hs-input-grid">
+                                <div class="hs-input-group">
+                                    <label>START VALUE</label>
+                                    <input type="text" value="0">
+                                </div>
+                                <div class="hs-input-group">
+                                    <label>END VALUE</label>
+                                    <input type="text" value="100">
+                                </div>
+                                <div class="hs-input-group">
+                                    <label>FRAME GAP</label>
+                                    <input type="text" value="10">
+                                </div>
+                                <div class="hs-input-group">
+                                    <label>KEYS 1-4</label>
+                                    <input type="text" value="Auto">
+                                </div>
+                            </div>
+                            
+                            <div class="hs-divider"></div>
+                            
+                            <div class="hs-anchor-section">
+                                <div class="hs-anchor-title">ANCHOR POINT ALIGNMENT</div>
+                                <div class="hs-anchor-grid">
+                                    <button class="hs-anchor-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="7" y1="7" x2="17" y2="17"></line><polyline points="7 17 7 7 17 7"></polyline></svg></button>
+                                    <button class="hs-anchor-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg></button>
+                                    <button class="hs-anchor-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="17" y1="7" x2="7" y2="17"></line><polyline points="17 17 17 7 7 7"></polyline></svg></button>
+                                    <button class="hs-anchor-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg></button>
+                                    <button class="hs-anchor-btn center active-cyan"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="4"></circle><circle cx="12" cy="12" r="8"></circle></svg></button>
+                                    <button class="hs-anchor-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg></button>
+                                    <button class="hs-anchor-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 7 17 17 17"></polyline></svg></button>
+                                    <button class="hs-anchor-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg></button>
+                                    <button class="hs-anchor-btn"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="17" y1="17" x2="7" y2="7"></line><polyline points="17 7 17 17 7 17"></polyline></svg></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- PANEL 3: Settings -->
+        <div class="panel-view" id="view-settings">
+            <div class="container">
+                <div style="flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; color:var(--text-secondary); opacity:0.6; height: 100%;">
+                    <svg viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:16px;">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    <h2 style="color: white; margin-bottom: 8px;">Settings</h2>
+                    <p>Configuration Options</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM NAVBAR (Mobile/Narrow only) -->
+        <nav class="bottom-navbar">
+            <div class="nav-indicator" id="navIndicator"></div>
+            <button class="nav-btn active" title="Keyframe Flow" onclick="switchMainView('view-keyframe', this)">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 3v18h18"></path>
+                    <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path>
+                </svg>
+            </button>
+            <button class="nav-btn" title="Hyper Speed" onclick="switchMainView('view-hyperspeed', this)">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+            </button>
+            <button class="nav-btn" title="Settings" onclick="switchMainView('view-settings', this)">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
+        </nav>
     </div>
 
     <!-- Success Toast Notification -->
@@ -182,6 +340,37 @@
     </div>
 
     <script>
+        // Main view switcher for the bottom navbar
+        function switchMainView(viewId, btnElement) {
+            // Remove active from all main panels
+            document.querySelectorAll('.app-container > .panel-view').forEach(panel => {
+                panel.classList.remove('active-view');
+            });
+            // Add active to the selected panel
+            const targetPanel = document.getElementById(viewId);
+            if (targetPanel) {
+                targetPanel.classList.add('active-view');
+            }
+
+            // Update navbar active state
+            if (btnElement) {
+                const parent = btnElement.parentElement;
+                const buttons = Array.from(parent.querySelectorAll('.nav-btn'));
+                buttons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                btnElement.classList.add('active');
+
+                // Move indicator (button width 28px + gap 6px = 34px stride)
+                const indicator = document.getElementById('navIndicator');
+                const index = buttons.indexOf(btnElement);
+                if (indicator && index > -1) {
+                    const offset = index * 34;
+                    indicator.style.transform = `translateX(${offset}px)`;
+                }
+            }
+        }
+
         // Force AE to load the latest smooth script (bypass CEP cache)
         const script = document.createElement('script');
         script.src = 'script.js?v=' + new Date().getTime();

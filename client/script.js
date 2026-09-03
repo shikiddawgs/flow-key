@@ -727,7 +727,7 @@ const bgInput = document.getElementById('bgInput');
 const canvasBg = document.getElementById('canvasBg');
 const appBgBtn = document.getElementById('appBgBtn');
 const appBgInput = document.getElementById('appBgInput');
-const appContainer = document.querySelector('.container');
+const appContainer = document.querySelector('.app-container');
 
 let fs = null;
 let path = null;
@@ -921,6 +921,7 @@ if (clearAppBgBtn) {
     clearAppBgBtn.addEventListener('click', () => {
         removeLongData('flowAppBg');
         if (appContainer) appContainer.style.backgroundImage = 'none';
+        saveLongData('flowAppBg', '');
     });
 }
 
