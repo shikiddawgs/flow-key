@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Keyframe Flow</title>
-    <link rel="stylesheet" href="styles.css?v=2.4">
+    <link rel="stylesheet" href="styles.css?v=3.0">
     <!-- Standard CEP JS library -->
     <script src="CSInterface.js"></script>
 </head>
@@ -36,33 +36,74 @@
                                 </div>
                             </div>
 
-                            <!-- Mode 2: Speed -->
-                            <div id="view-speed" class="view-panel">
-                                <div class="coming-soon-panel liquid-glass">
-                                    <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                                    </svg>
-                                    <p>Speed Editor</p>
-                                </div>
-                            </div>
-
-                            <!-- Mode 3: Bounce -->
+                            <!-- Mode 2: Bounce -->
                             <div id="view-bounce" class="view-panel">
-                                <div class="coming-soon-panel liquid-glass">
-                                    <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M2 12c2.5-7 4.5-7 7 0s4.5 7 7 0 4.5-7 7 0"></path>
-                                    </svg>
-                                    <p>Bounce Editor</p>
-                                </div>
-                            </div>
+                                <div class="bounce-module">
+                                    <!-- A. Header -->
+                                    <div class="bounce-header">
+                                        <span class="bounce-title">BOUNCE MOTION</span>
+                                        <span class="bounce-badge">Inertial Expression</span>
+                                    </div>
 
-                            <!-- Mode 4: Expressions -->
-                            <div id="view-expr" class="view-panel">
-                                <div class="coming-soon-panel liquid-glass">
-                                    <svg viewBox="0 0 24 24" width="36" height="36" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                                    </svg>
-                                    <p>Expressions Editor</p>
+                                    <!-- B. 1-Click Instant Presets -->
+                                    <div class="bounce-presets-row">
+                                        <button class="bounce-preset-btn" id="bouncePresetFast" data-amp="0.06" data-freq="5.0" data-decay="8.0">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                                            </svg>
+                                            <span>Fast</span>
+                                            <small>Snappy</small>
+                                        </button>
+                                        <button class="bounce-preset-btn active" id="bouncePresetSmooth" data-amp="0.05" data-freq="3.0" data-decay="4.5">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M2 12c2.5-7 4.5-7 7 0s4.5 7 7 0 4.5-7 7 0"></path>
+                                            </svg>
+                                            <span>Smooth</span>
+                                            <small>Balanced</small>
+                                        </button>
+                                        <button class="bounce-preset-btn" id="bouncePresetSlow" data-amp="0.07" data-freq="1.8" data-decay="2.5">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                                <circle cx="12" cy="12" r="8"></circle>
+                                                <circle cx="12" cy="12" r="3"></circle>
+                                            </svg>
+                                            <span>Slow</span>
+                                            <small>Jelly</small>
+                                        </button>
+                                    </div>
+
+                                    <!-- C. Property Selector -->
+                                    <div class="bounce-prop-selector">
+                                        <div class="segmented-control" id="bouncePropTabs">
+                                            <button class="segment active" data-prop="Scale">Scale</button>
+                                            <button class="segment" data-prop="Position">Position</button>
+                                            <button class="segment" data-prop="Rotation">Rotation</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- D. Fine-Tune Sliders -->
+                                    <div class="bounce-sliders">
+                                        <div class="bounce-slider-row">
+                                            <label>Amp</label>
+                                            <span class="bounce-val" id="bounceValAmp">0.05</span>
+                                            <input type="range" id="bounceSliderAmp" class="custom-range" min="0.01" max="0.20" step="0.01" value="0.05">
+                                        </div>
+                                        <div class="bounce-slider-row">
+                                            <label>Freq</label>
+                                            <span class="bounce-val" id="bounceValFreq">3.0</span>
+                                            <input type="range" id="bounceSliderFreq" class="custom-range" min="1.0" max="10.0" step="0.1" value="3.0">
+                                        </div>
+                                        <div class="bounce-slider-row">
+                                            <label>Decay</label>
+                                            <span class="bounce-val" id="bounceValDecay">4.5</span>
+                                            <input type="range" id="bounceSliderDecay" class="custom-range" min="1.0" max="15.0" step="0.1" value="4.5">
+                                        </div>
+                                    </div>
+
+                                    <!-- E. Action Buttons -->
+                                    <div class="bounce-actions-row">
+                                        <button id="bounceApplyBtn" class="bounce-apply-btn">Apply Custom</button>
+                                        <button id="bounceRemoveBtn" class="bounce-remove-btn">Remove</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -74,19 +115,9 @@
                                     <path d="M4 18c4 0 6-12 10-12s4 6 6 6"></path>
                                 </svg>
                             </button>
-                            <button class="tab-btn mode-tab" data-target="view-speed" aria-label="Speed Graph">
-                                <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                                </svg>
-                            </button>
                             <button class="tab-btn mode-tab" data-target="view-bounce" aria-label="Bounce / Spring">
                                 <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M2 12c2.5-7 4.5-7 7 0s4.5 7 7 0 4.5-7 7 0"></path>
-                                </svg>
-                            </button>
-                            <button class="tab-btn mode-tab" data-target="view-expr" aria-label="Expressions">
-                                <svg viewBox="0 0 24 24" width="15" height="15" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                                 </svg>
                             </button>
                         </div>
@@ -146,14 +177,14 @@
                     <div class="hs-section">
                         <div class="hs-section-title">LAYER CREATION</div>
                         <div class="hs-grid hs-grid-3">
-                            <button class="hs-card">
+                            <button class="hs-card" id="btnCreateNull">
                                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5"
                                     fill="none">
                                     <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
                                 </svg>
                                 <span>Null</span>
                             </button>
-                            <button class="hs-card">
+                            <button class="hs-card" id="btnCreateAdj">
                                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5"
                                     fill="none">
                                     <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
@@ -162,14 +193,14 @@
                                 </svg>
                                 <span>Adj Layer</span>
                             </button>
-                            <button class="hs-card">
+                            <button class="hs-card" id="btnCreateSolid">
                                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5"
                                     fill="none" stroke-dasharray="4 4">
                                     <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
                                 </svg>
                                 <span>Solid</span>
                             </button>
-                            <button class="hs-card">
+                            <button class="hs-card" id="btnCreateCamera">
                                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5"
                                     fill="none">
                                     <path
@@ -179,7 +210,7 @@
                                 </svg>
                                 <span>Camera</span>
                             </button>
-                            <button class="hs-card active-pink">
+                            <button class="hs-card active-pink" id="btnCreateText">
                                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5"
                                     fill="none">
                                     <polyline points="4 7 4 4 20 4 20 7"></polyline>
@@ -188,7 +219,7 @@
                                 </svg>
                                 <span>Text</span>
                             </button>
-                            <button class="hs-card">
+                            <button class="hs-card" id="btnFitToComp">
                                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5"
                                     fill="none">
                                     <polyline points="4 14 4 20 10 20"></polyline>
@@ -205,35 +236,35 @@
                     <div class="hs-section">
                         <div class="hs-section-title">QUICK SHAPE TOOLS</div>
                         <div class="hs-grid hs-grid-3">
-                            <button class="hs-card">
+                            <button class="hs-card" id="btnShapeRect">
                                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5"
                                     fill="none">
                                     <rect x="4" y="4" width="16" height="16"></rect>
                                 </svg>
                                 <span>Rectangle</span>
                             </button>
-                            <button class="hs-card">
+                            <button class="hs-card" id="btnShapeRounded">
                                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5"
                                     fill="none">
                                     <rect x="4" y="4" width="16" height="16" rx="4" ry="4"></rect>
                                 </svg>
                                 <span>Rounded</span>
                             </button>
-                            <button class="hs-card">
+                            <button class="hs-card" id="btnShapeEllipse">
                                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5"
                                     fill="none">
                                     <circle cx="12" cy="12" r="8"></circle>
                                 </svg>
                                 <span>Ellipse</span>
                             </button>
-                            <button class="hs-card">
+                            <button class="hs-card" id="btnShapePolygon">
                                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5"
                                     fill="none">
                                     <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon>
                                 </svg>
                                 <span>Polygon</span>
                             </button>
-                            <button class="hs-card">
+                            <button class="hs-card" id="btnShapeStar">
                                 <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="1.5"
                                     fill="none">
                                     <polygon
@@ -255,47 +286,47 @@
                                 <div class="hs-anchor-col">
                                     <div class="hs-anchor-title">ANCHOR POINT</div>
                                     <div class="hs-anchor-grid">
-                                        <button class="hs-anchor-btn" aria-label="Top Left"><svg viewBox="0 0 24 24" width="14" height="14"
+                                        <button class="hs-anchor-btn" id="btnAnchorTL" aria-label="Top Left"><svg viewBox="0 0 24 24" width="14" height="14"
                                                 stroke="currentColor" stroke-width="2" fill="none">
                                                 <line x1="7" y1="7" x2="17" y2="17"></line>
                                                 <polyline points="7 17 7 7 17 7"></polyline>
                                             </svg></button>
-                                        <button class="hs-anchor-btn" aria-label="Top Center"><svg viewBox="0 0 24 24" width="14" height="14"
+                                        <button class="hs-anchor-btn" id="btnAnchorTC" aria-label="Top Center"><svg viewBox="0 0 24 24" width="14" height="14"
                                                 stroke="currentColor" stroke-width="2" fill="none">
                                                 <line x1="12" y1="19" x2="12" y2="5"></line>
                                                 <polyline points="5 12 12 5 19 12"></polyline>
                                             </svg></button>
-                                        <button class="hs-anchor-btn" aria-label="Top Right"><svg viewBox="0 0 24 24" width="14" height="14"
+                                        <button class="hs-anchor-btn" id="btnAnchorTR" aria-label="Top Right"><svg viewBox="0 0 24 24" width="14" height="14"
                                                 stroke="currentColor" stroke-width="2" fill="none">
                                                 <line x1="17" y1="7" x2="7" y2="17"></line>
                                                 <polyline points="17 17 17 7 7 7"></polyline>
                                             </svg></button>
-                                        <button class="hs-anchor-btn" aria-label="Middle Left"><svg viewBox="0 0 24 24" width="14" height="14"
+                                        <button class="hs-anchor-btn" id="btnAnchorML" aria-label="Middle Left"><svg viewBox="0 0 24 24" width="14" height="14"
                                                 stroke="currentColor" stroke-width="2" fill="none">
                                                 <line x1="19" y1="12" x2="5" y2="12"></line>
                                                 <polyline points="12 19 5 12 12 5"></polyline>
                                             </svg></button>
-                                        <button class="hs-anchor-btn center active-cyan" aria-label="Center"><svg viewBox="0 0 24 24" width="14"
+                                        <button class="hs-anchor-btn center active-cyan" id="btnAnchorC" aria-label="Center"><svg viewBox="0 0 24 24" width="14"
                                                 height="14" stroke="currentColor" stroke-width="2" fill="none">
                                                 <circle cx="12" cy="12" r="4"></circle>
                                                 <circle cx="12" cy="12" r="8"></circle>
                                             </svg></button>
-                                        <button class="hs-anchor-btn" aria-label="Middle Right"><svg viewBox="0 0 24 24" width="14" height="14"
+                                        <button class="hs-anchor-btn" id="btnAnchorMR" aria-label="Middle Right"><svg viewBox="0 0 24 24" width="14" height="14"
                                                 stroke="currentColor" stroke-width="2" fill="none">
                                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                                                 <polyline points="12 5 19 12 12 19"></polyline>
                                             </svg></button>
-                                        <button class="hs-anchor-btn" aria-label="Bottom Left"><svg viewBox="0 0 24 24" width="14" height="14"
+                                        <button class="hs-anchor-btn" id="btnAnchorBL" aria-label="Bottom Left"><svg viewBox="0 0 24 24" width="14" height="14"
                                                 stroke="currentColor" stroke-width="2" fill="none">
                                                 <line x1="7" y1="17" x2="17" y2="7"></line>
                                                 <polyline points="7 7 7 17 17 17"></polyline>
                                             </svg></button>
-                                        <button class="hs-anchor-btn" aria-label="Bottom Center"><svg viewBox="0 0 24 24" width="14" height="14"
+                                        <button class="hs-anchor-btn" id="btnAnchorBC" aria-label="Bottom Center"><svg viewBox="0 0 24 24" width="14" height="14"
                                                 stroke="currentColor" stroke-width="2" fill="none">
                                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                                 <polyline points="19 12 12 19 5 12"></polyline>
                                             </svg></button>
-                                        <button class="hs-anchor-btn" aria-label="Bottom Right"><svg viewBox="0 0 24 24" width="14" height="14"
+                                        <button class="hs-anchor-btn" id="btnAnchorBR" aria-label="Bottom Right"><svg viewBox="0 0 24 24" width="14" height="14"
                                                 stroke="currentColor" stroke-width="2" fill="none">
                                                 <line x1="17" y1="17" x2="7" y2="7"></line>
                                                 <polyline points="17 7 17 17 7 17"></polyline>
@@ -565,11 +596,22 @@
             // Remove active from all main panels
             document.querySelectorAll('.app-container > .panel-view').forEach(panel => {
                 panel.classList.remove('active-view');
+                panel.classList.remove('tab-bounce-in');
             });
             // Add active to the selected panel
             const targetPanel = document.getElementById(viewId);
             if (targetPanel) {
                 targetPanel.classList.add('active-view');
+                
+                // Force DOM reflow to restart CSS animation every time
+                void targetPanel.offsetWidth;
+                
+                targetPanel.classList.add('tab-bounce-in');
+                
+                // Trigger cascading stagger on preset items when switching to Slide 1
+                if (viewId === 'view-keyframe' && typeof restaggerPresets === 'function') {
+                    restaggerPresets();
+                }
             }
 
             // Update navbar active state

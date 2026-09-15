@@ -10,6 +10,13 @@ try {
         fs = require('fs');
         path = require('path');
     }
+    
+    // Auto-reload the JSX host script when the panel is reloaded
+    if (isCEP) {
+        var extPath = csInterface.getSystemPath(SystemPath.EXTENSION);
+        var hostPath = extPath + '/host/index.jsx';
+        csInterface.evalScript('$.evalFile("' + hostPath + '")');
+    }
 } catch (e) {
     console.warn("Not running in CEP environment.");
 }
@@ -893,11 +900,32 @@ async function loadPresets() {
                 }
             });
 
+            // JS-driven stagger: set inline animation-delay for cascading top-to-bottom
+            item.classList.add('pop-animate');
+            item.style.animationDelay = `${(index + 1) * 0.04}s`;
+
             grid.appendChild(item);
         });
     } catch (e) {
         console.error("Failed to load presets", e);
     }
+}
+
+// Helper: re-trigger stagger animation on preset items (called on tab switch)
+function restaggerPresets() {
+    const grid = document.getElementById('presetsGrid');
+    if (!grid) return;
+    const items = grid.querySelectorAll('.preset-item');
+    items.forEach((item, i) => {
+        item.classList.remove('pop-animate');
+        item.style.animationDelay = '';
+    });
+    // Force reflow
+    void grid.offsetWidth;
+    items.forEach((item, i) => {
+        item.classList.add('pop-animate');
+        item.style.animationDelay = `${(i + 1) * 0.04}s`;
+    });
 }
 
 // Init
@@ -1119,25 +1147,31 @@ if (isCEP && csInterface) {
     });
 }
 
-// --- Sidebar Tab Switching Logic ---
+// --- Sidebar Tab Switching Logic (single handler, no duplicates) ---
 const tabBtns = document.querySelectorAll('.tab-btn');
 const viewPanels = document.querySelectorAll('.view-panel');
 
 window.switchMode = function(modeName) {
     const targetId = modeName.startsWith('view-') ? modeName : `view-${modeName}`;
     
-    // 1. Remove active class from all buttons and panels
+    // 1. Remove active + animation class from all buttons and panels
     tabBtns.forEach(b => b.classList.remove('active'));
-    viewPanels.forEach(p => p.classList.remove('active'));
+    viewPanels.forEach(p => {
+        p.classList.remove('active');
+        p.classList.remove('tab-bounce-in');
+    });
     
     // 2. Add active class to corresponding button
     const targetBtn = Array.from(tabBtns).find(b => b.getAttribute('data-target') === targetId);
     if (targetBtn) targetBtn.classList.add('active');
     
-    // 3. Find target panel and activate it
+    // 3. Find target panel and activate with smooth bounce animation
     const targetPanel = document.getElementById(targetId);
     if (targetPanel) {
         targetPanel.classList.add('active');
+        // Force DOM reflow to restart CSS animation cleanly
+        void targetPanel.offsetWidth;
+        targetPanel.classList.add('tab-bounce-in');
         
         if (targetId === 'value' || targetId === 'view-value') {
             setTimeout(() => {
@@ -1153,6 +1187,136 @@ tabBtns.forEach(btn => {
         window.switchMode(btn.getAttribute('data-target'));
     });
 });
+
+// ==========================================
+// BOUNCE MOTION MODULE LOGIC
+// ==========================================
+(() => {
+    const sliderAmp   = document.getElementById('bounceSliderAmp');
+    const sliderFreq  = document.getElementById('bounceSliderFreq');
+    const sliderDecay = document.getElementById('bounceSliderDecay');
+    const valAmp      = document.getElementById('bounceValAmp');
+    const valFreq     = document.getElementById('bounceValFreq');
+    const valDecay    = document.getElementById('bounceValDecay');
+    const applyBtn    = document.getElementById('bounceApplyBtn');
+    const removeBtn   = document.getElementById('bounceRemoveBtn');
+    const presetBtns  = document.querySelectorAll('.bounce-preset-btn');
+    const propTabs    = document.querySelectorAll('#bouncePropTabs .segment');
+
+    let selectedProp = 'Scale';
+
+    // --- Helpers ---
+    const getAccentColor = () => {
+        return getComputedStyle(document.documentElement).getPropertyValue('--dynamic-accent').trim() || '#FF2A75';
+    };
+
+    const updateBounceSlider = (slider, valEl, decimals) => {
+        if (!slider) return;
+        const val = parseFloat(slider.value);
+        const min = parseFloat(slider.min) || 0;
+        const max = parseFloat(slider.max) || 1;
+        const pct = ((val - min) / (max - min)) * 100;
+        const accent = getAccentColor();
+        slider.style.background = `linear-gradient(to right, ${accent} ${pct}%, rgba(255,255,255,0.1) ${pct}%)`;
+        if (valEl) valEl.textContent = val.toFixed(decimals);
+    };
+
+    const updateAllBounceSliders = () => {
+        updateBounceSlider(sliderAmp, valAmp, 2);
+        updateBounceSlider(sliderFreq, valFreq, 1);
+        updateBounceSlider(sliderDecay, valDecay, 1);
+    };
+
+    const setBounceValues = (amp, freq, decay) => {
+        if (sliderAmp)   sliderAmp.value   = amp;
+        if (sliderFreq)  sliderFreq.value  = freq;
+        if (sliderDecay) sliderDecay.value  = decay;
+        updateAllBounceSliders();
+    };
+
+    const callApplyBounce = (amp, freq, decay) => {
+        const script = `applyBounceExpression("${selectedProp}", ${amp}, ${freq}, ${decay})`;
+        if (isCEP && csInterface) {
+            csInterface.evalScript(script, (result) => {
+                if (result === 'error' || result === 'undefined' || result === 'EvalScript error.') {
+                    console.error('Bounce apply failed:', result);
+                }
+            });
+        } else {
+            console.log('[MOCK MODE] ' + script);
+        }
+    };
+
+    const callRemoveBounce = () => {
+        const script = `removeBounceExpression("${selectedProp}")`;
+        if (isCEP && csInterface) {
+            csInterface.evalScript(script, (result) => {
+                if (result === 'error' || result === 'undefined' || result === 'EvalScript error.') {
+                    console.error('Bounce remove failed:', result);
+                }
+            });
+        } else {
+            console.log('[MOCK MODE] ' + script);
+        }
+    };
+
+    // --- Preset Buttons ---
+    presetBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Toggle active state
+            presetBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Read preset values from data attributes
+            const amp   = parseFloat(btn.dataset.amp);
+            const freq  = parseFloat(btn.dataset.freq);
+            const decay = parseFloat(btn.dataset.decay);
+
+            // Update sliders and apply immediately
+            setBounceValues(amp, freq, decay);
+            callApplyBounce(amp, freq, decay);
+        });
+    });
+
+    // --- Property Selector Tabs ---
+    propTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            propTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            selectedProp = tab.dataset.prop;
+        });
+    });
+
+    // --- Slider Events ---
+    if (sliderAmp) sliderAmp.addEventListener('input', () => {
+        updateBounceSlider(sliderAmp, valAmp, 2);
+        presetBtns.forEach(b => b.classList.remove('active'));
+    });
+    if (sliderFreq) sliderFreq.addEventListener('input', () => {
+        updateBounceSlider(sliderFreq, valFreq, 1);
+        presetBtns.forEach(b => b.classList.remove('active'));
+    });
+    if (sliderDecay) sliderDecay.addEventListener('input', () => {
+        updateBounceSlider(sliderDecay, valDecay, 1);
+        presetBtns.forEach(b => b.classList.remove('active'));
+    });
+
+    // --- Apply Custom Button ---
+    if (applyBtn) applyBtn.addEventListener('click', () => {
+        const amp   = parseFloat(sliderAmp.value);
+        const freq  = parseFloat(sliderFreq.value);
+        const decay = parseFloat(sliderDecay.value);
+        callApplyBounce(amp, freq, decay);
+    });
+
+    // --- Remove Bounce Button ---
+    if (removeBtn) removeBtn.addEventListener('click', () => {
+        callRemoveBounce();
+    });
+
+    // Init slider fills on load
+    updateAllBounceSliders();
+})();
 
 // ==========================================
 // SETTINGS UI LOGIC (Slider, Toggle, Storage)
@@ -1390,6 +1554,74 @@ tabBtns.forEach(btn => {
             });
         }
     });
+
+    // --- KidFaster Features Event Listeners ---
+    
+    // 1. Layer Creation
+    const creationBtns = [
+        { id: "btnCreateNull", script: "createSmartNull()" },
+        { id: "btnCreateAdj", script: "createAdjustmentLayer()" },
+        { id: "btnCreateSolid", script: "createSolid()" },
+        { id: "btnCreateCamera", script: "createCamera()" },
+        { id: "btnCreateText", script: "createTextLayer()" },
+        { id: "btnFitToComp", script: "fitLayerToComp()" }
+    ];
+    
+    creationBtns.forEach(btnInfo => {
+        const el = document.getElementById(btnInfo.id);
+        if (el) {
+            el.addEventListener("click", () => {
+                if (!isCEP) return console.log(`[MOCK] ${btnInfo.script}`);
+                csInterface.evalScript(btnInfo.script);
+            });
+        }
+    });
+    
+    // 2. Quick Shapes (Dual Mode)
+    const shapeBtns = [
+        { id: "btnShapeRect", shape: "Rectangle" },
+        { id: "btnShapeRounded", shape: "Rounded" },
+        { id: "btnShapeEllipse", shape: "Ellipse" },
+        { id: "btnShapePolygon", shape: "Polygon" },
+        { id: "btnShapeStar", shape: "Star" }
+    ];
+    
+    shapeBtns.forEach(btnInfo => {
+        const el = document.getElementById(btnInfo.id);
+        if (el) {
+            el.addEventListener("click", (e) => {
+                const script = e.shiftKey ? `addMaskToLayer("${btnInfo.shape}")` : `createShapeLayer("${btnInfo.shape}")`;
+                if (!isCEP) return console.log(`[MOCK] ${script}`);
+                csInterface.evalScript(script);
+            });
+        }
+    });
+    
+    // 3. Anchor Point
+    const anchorBtns = [
+        { id: "btnAnchorTL", alignX: "left", alignY: "top" },
+        { id: "btnAnchorTC", alignX: "center", alignY: "top" },
+        { id: "btnAnchorTR", alignX: "right", alignY: "top" },
+        { id: "btnAnchorML", alignX: "left", alignY: "center" },
+        { id: "btnAnchorC", alignX: "center", alignY: "center" },
+        { id: "btnAnchorMR", alignX: "right", alignY: "center" },
+        { id: "btnAnchorBL", alignX: "left", alignY: "bottom" },
+        { id: "btnAnchorBC", alignX: "center", alignY: "bottom" },
+        { id: "btnAnchorBR", alignX: "right", alignY: "bottom" }
+    ];
+    
+    anchorBtns.forEach(btnInfo => {
+        const el = document.getElementById(btnInfo.id);
+        if (el) {
+            el.addEventListener("click", () => {
+                const script = `setAnchorPoint("${btnInfo.alignX}", "${btnInfo.alignY}")`;
+                if (!isCEP) return console.log(`[MOCK] ${script}`);
+                csInterface.evalScript(script);
+            });
+        }
+    });
+
+    // 4. Mode Switch is now handled by window.switchMode (no duplicate handler)
 
     loadSettings();
 })();

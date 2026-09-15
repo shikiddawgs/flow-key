@@ -136,8 +136,8 @@ input:focus-visible {
 
 .brand-logo,
 .hs-brand-logo {
-    height: clamp(48px, 15vw, 76px);
-    max-width: 250px;
+    height: clamp(56px, 18vw, 90px);
+    max-width: 300px;
     width: auto;
     object-fit: contain;
     margin: 0 auto;
@@ -176,11 +176,15 @@ input:focus-visible {
 }
 
 .view-panels {
-    flex: 1;
-    min-width: 0;
+    display: grid;
+    grid-template-areas: "panelStack";
+    width: 100%;
     max-width: 218px;
+    height: 218px;
+    position: relative;
     margin: 0;
     flex-shrink: 0;
+    overflow: hidden;
 }
 
 .flow-presets-col {
@@ -199,6 +203,8 @@ input:focus-visible {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    align-self: flex-start;
+    margin-top: 2px;
     gap: 5px;
     padding: 5px 3px;
     border-radius: 9999px;
@@ -256,27 +262,27 @@ input:focus-visible {
     /* Prevents flex overflow */
 }
 
-/* View Panels (State Management) */
 .view-panel {
-    position: absolute;
-    top: 0;
-    left: 0;
+    grid-area: panelStack;
     width: 100%;
     height: 100%;
+    max-width: 218px;
+    max-height: 218px;
     display: flex;
     flex-direction: column;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(10px);
-    transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
+    transform: translateY(6px) scale(0.98);
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s ease;
     pointer-events: none;
+    box-sizing: border-box;
+    will-change: opacity, transform;
 }
 
 .view-panel.active {
-    position: relative;
     opacity: 1;
     visibility: visible;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     pointer-events: auto;
 }
 
@@ -1854,3 +1860,383 @@ input:focus-visible {
 .hex-full-btn:active {
     transform: scale(0.97);
 }
+
+/* ========================================= */
+/* BOUNCE MOTION MODULE                       */
+/* ========================================= */
+
+.bounce-module {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    max-width: 218px;
+    height: 100%;
+    margin: 0 auto;
+    box-sizing: border-box;
+    justify-content: space-between;
+}
+
+/* A. Header */
+.bounce-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.bounce-title {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 700;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.bounce-badge {
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: rgba(var(--dynamic-accent-rgb, 255, 42, 117), 0.9);
+    background: rgba(var(--dynamic-accent-rgb, 255, 42, 117), 0.12);
+    border: 1px solid rgba(var(--dynamic-accent-rgb, 255, 42, 117), 0.25);
+    padding: 2px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+    text-shadow: 0 0 6px rgba(var(--dynamic-accent-rgb, 255, 42, 117), 0.4);
+}
+
+/* B. 1-Click Presets */
+.bounce-presets-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.bounce-preset-btn {
+    position: relative;
+    background-color: rgba(var(--glass-tint-rgb), var(--glass-bg-opacity, 0.55));
+    backdrop-filter: blur(var(--glass-blur-amount, 16px)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur-amount, 16px)) saturate(180%);
+    border: var(--glass-border-style, 1px solid rgba(255, 255, 255, 0.12));
+    border-radius: 12px;
+    padding: 6px 4px 5px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: inherit;
+    outline: none;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.18), 0 4px 12px rgba(0, 0, 0, 0.25);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.bounce-preset-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 45%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
+    pointer-events: none;
+    border-radius: 11px 11px 0 0;
+}
+
+.bounce-preset-btn svg {
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.bounce-preset-btn span {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    color: rgba(255, 255, 255, 0.85);
+    transition: color 0.2s ease;
+}
+
+.bounce-preset-btn small {
+    font-size: 8px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.45);
+    letter-spacing: 0.3px;
+    transition: color 0.2s ease;
+}
+
+.bounce-preset-btn:hover {
+    background-color: rgba(55, 30, 52, 0.68);
+    border-color: rgba(var(--dynamic-accent-rgb, 255, 42, 117), 0.5);
+    box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.35), 0 6px 20px rgba(var(--dynamic-accent-rgb, 255, 42, 117), 0.35);
+    transform: translateY(-2px);
+}
+
+.bounce-preset-btn:hover svg {
+    transform: scale(1.1);
+    color: #ffffff;
+}
+
+.bounce-preset-btn:hover span,
+.bounce-preset-btn:hover small {
+    color: #ffffff;
+}
+
+.bounce-preset-btn:active {
+    transform: scale(0.96);
+}
+
+.bounce-preset-btn.active {
+    border-color: var(--dynamic-accent, #FF2A75);
+    background-color: rgba(var(--dynamic-accent-rgb, 255, 42, 117), 0.2);
+    box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.35), 0 0 14px rgba(var(--dynamic-accent-rgb, 255, 42, 117), 0.5);
+    color: #ffffff;
+}
+
+.bounce-preset-btn.active span,
+.bounce-preset-btn.active small {
+    color: #ffffff;
+}
+
+.bounce-preset-btn:focus {
+    outline: none;
+}
+
+/* C. Property Selector */
+.bounce-prop-selector {
+    flex-shrink: 0;
+}
+
+/* D. Fine-Tune Sliders */
+.bounce-sliders {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.bounce-slider-row {
+    display: grid;
+    grid-template-columns: 32px 36px 1fr;
+    align-items: center;
+    gap: 6px;
+}
+
+.bounce-slider-row label {
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 0.3px;
+}
+
+.bounce-val {
+    font-size: 10px;
+    font-family: monospace;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    text-align: right;
+}
+
+/* E. Action Buttons */
+.bounce-actions-row {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.bounce-apply-btn {
+    flex: 1;
+    height: 34px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(48, 24, 42, 0.65);
+    color: white;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.28), 0 6px 18px rgba(0, 0, 0, 0.4);
+    outline: none !important;
+    font-family: inherit;
+}
+
+.bounce-apply-btn:hover {
+    background: var(--dynamic-accent);
+    box-shadow: 0 4px 18px rgba(var(--dynamic-accent-rgb, 255, 42, 117), 0.55);
+    transform: translateY(-1px);
+}
+
+.bounce-apply-btn:active {
+    transform: scale(0.97);
+}
+
+.bounce-remove-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 77, 79, 0.3);
+    background: rgba(255, 77, 79, 0.1);
+    color: #ff6b6b;
+    font-weight: 700;
+    font-size: 9px;
+    letter-spacing: 0.3px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    outline: none !important;
+    font-family: inherit;
+    flex-shrink: 0;
+}
+
+.bounce-remove-btn:hover {
+    background: rgba(255, 77, 79, 0.25);
+    border-color: rgba(255, 77, 79, 0.6);
+    color: #ffffff;
+    box-shadow: 0 0 14px rgba(255, 77, 79, 0.4);
+    transform: translateY(-1px);
+}
+
+.bounce-remove-btn:active {
+    transform: scale(0.95);
+}
+
+
+/* ==========================================
+   TAB BOUNCE ANIMATIONS & STAGGERING
+   ========================================== */
+
+@keyframes childPopIn {
+    0% {
+        opacity: 0;
+        transform: translateY(14px) scale(0.95) translateZ(0);
+    }
+    60% {
+        opacity: 1;
+        transform: translateY(-3px) scale(1.015) translateZ(0);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1) translateZ(0);
+    }
+}
+
+/* Utility class: JS adds this + inline animation-delay for stagger */
+.pop-animate {
+    animation: childPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    opacity: 0;
+    will-change: transform, opacity;
+}
+
+/* Scoped stagger for HyperSpeed grid cards (Slide 2) */
+.tab-bounce-in .hs-grid .hs-card:nth-child(1) { animation-delay: 0.03s; }
+.tab-bounce-in .hs-grid .hs-card:nth-child(2) { animation-delay: 0.06s; }
+.tab-bounce-in .hs-grid .hs-card:nth-child(3) { animation-delay: 0.09s; }
+.tab-bounce-in .hs-grid .hs-card:nth-child(4) { animation-delay: 0.12s; }
+.tab-bounce-in .hs-grid .hs-card:nth-child(5) { animation-delay: 0.15s; }
+.tab-bounce-in .hs-grid .hs-card:nth-child(6) { animation-delay: 0.18s; }
+.tab-bounce-in .hs-grid .hs-card:nth-child(7) { animation-delay: 0.21s; }
+.tab-bounce-in .hs-grid .hs-card:nth-child(8) { animation-delay: 0.24s; }
+.tab-bounce-in .hs-grid .hs-card:nth-child(9) { animation-delay: 0.27s; }
+
+/* Scoped stagger for HS anchor buttons */
+.tab-bounce-in .hs-anchor-grid .hs-anchor-btn:nth-child(1) { animation-delay: 0.03s; }
+.tab-bounce-in .hs-anchor-grid .hs-anchor-btn:nth-child(2) { animation-delay: 0.06s; }
+.tab-bounce-in .hs-anchor-grid .hs-anchor-btn:nth-child(3) { animation-delay: 0.09s; }
+.tab-bounce-in .hs-anchor-grid .hs-anchor-btn:nth-child(4) { animation-delay: 0.12s; }
+.tab-bounce-in .hs-anchor-grid .hs-anchor-btn:nth-child(5) { animation-delay: 0.15s; }
+.tab-bounce-in .hs-anchor-grid .hs-anchor-btn:nth-child(6) { animation-delay: 0.18s; }
+.tab-bounce-in .hs-anchor-grid .hs-anchor-btn:nth-child(7) { animation-delay: 0.21s; }
+.tab-bounce-in .hs-anchor-grid .hs-anchor-btn:nth-child(8) { animation-delay: 0.24s; }
+.tab-bounce-in .hs-anchor-grid .hs-anchor-btn:nth-child(9) { animation-delay: 0.27s; }
+
+/* Scoped stagger for HS tool buttons */
+.tab-bounce-in .hs-layer-tools-grid .hs-tool-btn:nth-child(1) { animation-delay: 0.03s; }
+.tab-bounce-in .hs-layer-tools-grid .hs-tool-btn:nth-child(2) { animation-delay: 0.06s; }
+.tab-bounce-in .hs-layer-tools-grid .hs-tool-btn:nth-child(3) { animation-delay: 0.09s; }
+.tab-bounce-in .hs-layer-tools-grid .hs-tool-btn:nth-child(4) { animation-delay: 0.12s; }
+.tab-bounce-in .hs-layer-tools-grid .hs-tool-btn:nth-child(5) { animation-delay: 0.15s; }
+.tab-bounce-in .hs-layer-tools-grid .hs-tool-btn:nth-child(6) { animation-delay: 0.18s; }
+
+/* Apply bouncy entrance to HS cards, tools, anchors, section titles */
+.tab-bounce-in .hs-card,
+.tab-bounce-in .hs-anchor-btn,
+.tab-bounce-in .hs-tool-btn,
+.tab-bounce-in .hs-section-title {
+    animation: childPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    opacity: 0;
+    will-change: transform, opacity;
+}
+
+/* Scoped stagger for HS section titles */
+.tab-bounce-in .hs-section:nth-child(1) .hs-section-title { animation-delay: 0.02s; }
+.tab-bounce-in .hs-section:nth-child(2) .hs-section-title { animation-delay: 0.10s; }
+.tab-bounce-in .hs-section:nth-child(3) .hs-section-title { animation-delay: 0.20s; }
+.tab-bounce-in .hs-section:nth-child(4) .hs-section-title { animation-delay: 0.28s; }
+.tab-bounce-in .hs-section:nth-child(5) .hs-section-title { animation-delay: 0.36s; }
+
+/* Apply bouncy entrance to Settings (Slide 3) cards */
+.tab-bounce-in .settings-card,
+.tab-bounce-in .settings-header {
+    animation: childPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    opacity: 0;
+    will-change: transform, opacity;
+}
+
+/* Scoped stagger for settings cards */
+.tab-bounce-in .settings-header { animation-delay: 0.02s; }
+.tab-bounce-in .settings-scroll-area > .settings-card:nth-child(1) { animation-delay: 0.05s; }
+.tab-bounce-in .settings-scroll-area > .settings-card:nth-child(2) { animation-delay: 0.10s; }
+.tab-bounce-in .settings-scroll-area > .settings-card:nth-child(3) { animation-delay: 0.15s; }
+.tab-bounce-in .settings-scroll-area > .settings-card:nth-child(4) { animation-delay: 0.20s; }
+.tab-bounce-in .settings-scroll-area > .settings-card:nth-child(5) { animation-delay: 0.25s; }
+.tab-bounce-in .settings-scroll-area > .settings-card:nth-child(6) { animation-delay: 0.30s; }
+
+/* Apply bouncy entrance to Slide 1 graph elements */
+.tab-bounce-in .canvas-container,
+.tab-bounce-in .mode-tabs-pill,
+.tab-bounce-in .liquid-coord,
+.tab-bounce-in .liquid-icon-btn,
+.tab-bounce-in .liquid-apply-btn,
+.tab-bounce-in .coord-row,
+.tab-bounce-in .graph-actions-row {
+    animation: childPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    opacity: 0;
+    will-change: transform, opacity;
+}
+.tab-bounce-in .canvas-container { animation-delay: 0.02s; }
+.tab-bounce-in .mode-tabs-pill { animation-delay: 0.06s; }
+.tab-bounce-in .coord-row { animation-delay: 0.10s; }
+.tab-bounce-in .graph-actions-row { animation-delay: 0.14s; }
+
+/* Apply bouncy entrance to bounce-module sub-view children */
+.tab-bounce-in .bounce-header,
+.tab-bounce-in .bounce-presets-row,
+.tab-bounce-in .bounce-prop-selector,
+.tab-bounce-in .bounce-sliders,
+.tab-bounce-in .bounce-actions-row {
+    animation: childPopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    opacity: 0;
+    will-change: transform, opacity;
+}
+.tab-bounce-in .bounce-header { animation-delay: 0.02s; }
+.tab-bounce-in .bounce-presets-row { animation-delay: 0.06s; }
+.tab-bounce-in .bounce-prop-selector { animation-delay: 0.10s; }
+.tab-bounce-in .bounce-sliders { animation-delay: 0.14s; }
+.tab-bounce-in .bounce-actions-row { animation-delay: 0.18s; }
