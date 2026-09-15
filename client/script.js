@@ -1,9 +1,15 @@
-// --- CSInterface Initialization ---
+// --- CSInterface & Node.js Initialization ---
 let csInterface;
 let isCEP = false;
+let fs = null;
+let path = null;
 try {
     csInterface = new CSInterface();
     isCEP = (typeof window.__adobe_cep__ !== "undefined");
+    if (isCEP && typeof require !== "undefined") {
+        fs = require('fs');
+        path = require('path');
+    }
 } catch (e) {
     console.warn("Not running in CEP environment.");
 }
@@ -11,6 +17,23 @@ try {
 if (!isCEP) {
     console.log("Mock Mode Active: Running in standard browser.");
 }
+
+// Strip any native tooltip attributes from bottom navbar & dock
+(function cleanDockTooltips() {
+    function strip() {
+        const dock = document.querySelector('.dock-container');
+        if (dock) {
+            dock.querySelectorAll('*').forEach(el => {
+                el.removeAttribute('title');
+                el.removeAttribute('aria-label');
+            });
+        }
+    }
+    strip();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', strip);
+    }
+})();
 
 // --- Canvas & Bezier Logic ---
 const canvas = document.getElementById('bezierCanvas');
@@ -150,11 +173,36 @@ function bounceHandles() {
     bounceAnimId = requestAnimationFrame(bounceStep);
 }
 
-let accentColor = '#1890ff';
+function hexToRgbValues(hex) {
+    if (!hex) return '255, 42, 117';
+    let c = hex.replace('#', '');
+    if (c.length === 3) c = c.split('').map(x => x + x).join('');
+    const num = parseInt(c, 16);
+    if (isNaN(num)) return '255, 42, 117';
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    return `${r}, ${g}, ${b}`;
+}
+
+function hexToRgba(hex, alpha = 1) {
+    return `rgba(${hexToRgbValues(hex)}, ${alpha})`;
+}
+
+let accentColor = '#FF2A75';
 try {
-    const savedColor = localStorage.getItem('flowAccentColor');
-    if (savedColor) accentColor = savedColor;
+    const s = JSON.parse(localStorage.getItem('flowSettings') || '{}');
+    if (s && s.accentColor) {
+        accentColor = s.accentColor;
+    } else {
+        const savedColor = localStorage.getItem('flowAccentColor');
+        if (savedColor) accentColor = savedColor;
+    }
 } catch (e) { }
+
+document.documentElement.style.setProperty('--dynamic-accent', accentColor);
+document.documentElement.style.setProperty('--accent', accentColor);
+document.documentElement.style.setProperty('--dynamic-accent-rgb', hexToRgbValues(accentColor));
 
 function animateCurveTo(targetP1, targetP2) {
     if (animationId) cancelAnimationFrame(animationId);
@@ -168,18 +216,24 @@ function animateCurveTo(targetP1, targetP2) {
     const startP1 = { x: p1.x, y: p1.y };
     const startP2 = { x: p2.x, y: p2.y };
 
-    const duration = 450; // 450ms — smooth with gentle bounce
+    const duration = 450; // ms
 
-    const startTime = performance.now();
-
-    // Gentle easeOutBack — sedikit overshoot biar mantul halus
+    // Gentle easeOutBack — sedikit overshoot biar mantul halus di titik akhir
     const easeOutBack = (t) => {
-        const c1 = 0.5; // Subtle bounce, ga terlalu kenceng
+        const c1 = 0.5; // Subtle bounce
         const c3 = c1 + 1;
         return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
     };
 
+    let startTime = null;
+
     function step(currentTime) {
+        if (!startTime) {
+            startTime = currentTime; // fix first frame lag spike
+            animationId = requestAnimationFrame(step);
+            return;
+        }
+
         const elapsed = currentTime - startTime;
         let progress = Math.min(elapsed / duration, 1);
 
@@ -195,9 +249,13 @@ function animateCurveTo(targetP1, targetP2) {
         if (progress < 1) {
             animationId = requestAnimationFrame(step);
         } else {
+            p1.x = targetStateP1.x;
+            p1.y = targetStateP1.y;
+            p2.x = targetStateP2.x;
+            p2.y = targetStateP2.y;
             animationId = null;
-            // Trigger bounce pada titik bulet setelah kurva selesai bergerak
             bounceHandles();
+            render();
             saveCurrentCurve();
         }
     }
@@ -209,8 +267,8 @@ function render() {
     const { width, height, padding, drawWidth, drawHeight } = getCanvasDimensions();
     ctx.clearRect(0, 0, width, height);
 
-    // Draw grid
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    // Draw grid (subtle accent tint like in screenshot)
+    ctx.strokeStyle = hexToRgba(accentColor, 0.22);
     ctx.lineWidth = 1;
     ctx.beginPath();
 
@@ -239,8 +297,8 @@ function render() {
     const cP3 = { x: toCanvasX(p3.x), y: toCanvasY(p3.y) };
 
     // Diagonal dashed line
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
+    ctx.setLineDash([4, 4]);
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(cP0.x, cP0.y);
@@ -264,18 +322,27 @@ function render() {
     ctx.lineTo(cP2.x, cP2.y);
     ctx.stroke();
 
-    // Draw bezier curve (thick white) — with bounce scale
-    const baseCurveWidth = Math.max(3, 7 * scale);
+    // Draw bezier curve (thick crisp white with soft glow)
+    const baseCurveWidth = Math.max(3, 6 * scale);
+    ctx.save();
+    ctx.shadowColor = hexToRgba(accentColor, 0.6);
+    ctx.shadowBlur = 8;
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = baseCurveWidth * curveBounceScale; ctx.lineCap = 'round';
+    ctx.lineWidth = baseCurveWidth * curveBounceScale;
+    ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(cP0.x, cP0.y);
     ctx.bezierCurveTo(cP1.x, cP1.y, cP2.x, cP2.y, cP3.x, cP3.y);
     ctx.stroke();
+    ctx.restore();
 
-    // Draw control point handles (blue circles with white border) — with bounce scale
+    // Draw control point handles (pink glowing circles with white rim)
     const baseHandleRadius = Math.max(4, 6 * scale);
     const handleRadius = baseHandleRadius * handleBounceScale;
+
+    ctx.save();
+    ctx.shadowColor = accentColor;
+    ctx.shadowBlur = 10;
     ctx.fillStyle = accentColor;
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = Math.max(1.5, 2 * scale);
@@ -289,6 +356,7 @@ function render() {
     ctx.arc(cP2.x, cP2.y, handleRadius, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+    ctx.restore();
 
     updateCoordinateDisplay();
 }
@@ -552,6 +620,17 @@ confirmSaveBtn.addEventListener('click', () => {
     customPresets.push(newPreset);
     localStorage.setItem('flowCustomPresets', JSON.stringify(customPresets));
 
+    // Remove from deleted list if it was previously deleted
+    try {
+        let deleted = [];
+        const dStored = localStorage.getItem('flowDeletedPresets');
+        if (dStored) deleted = JSON.parse(dStored);
+        if (deleted.includes(name)) {
+            deleted = deleted.filter(n => n !== name);
+            localStorage.setItem('flowDeletedPresets', JSON.stringify(deleted));
+        }
+    } catch (e) { }
+
     // Show toast
     const toast = document.getElementById('toast');
     toast.innerText = `Saved: ${name}`;
@@ -571,27 +650,83 @@ const deleteModal = document.getElementById('deleteModal');
 const deleteModalText = document.getElementById('deleteModalText');
 const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
 const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-let presetToDeleteIndex = -1;
+let presetToDelete = null;
 
 cancelDeleteBtn.addEventListener('click', () => {
     deleteModal.classList.remove('show');
-    presetToDeleteIndex = -1;
+    presetToDelete = null;
 });
 
 confirmDeleteBtn.addEventListener('click', () => {
-    if (presetToDeleteIndex > -1) {
-        let customPresets = [];
+    if (presetToDelete) {
+        const targetName = presetToDelete.name;
+
+        // 1. Remove from flowCustomPresets if present
         try {
             const stored = localStorage.getItem('flowCustomPresets');
-            if (stored) customPresets = JSON.parse(stored);
-            customPresets.splice(presetToDeleteIndex, 1);
-            localStorage.setItem('flowCustomPresets', JSON.stringify(customPresets));
-            loadPresets();
+            if (stored) {
+                let customPresets = JSON.parse(stored);
+                if (Array.isArray(customPresets)) {
+                    customPresets = customPresets.filter(p => p.name !== targetName);
+                    localStorage.setItem('flowCustomPresets', JSON.stringify(customPresets));
+                }
+            }
         } catch (err) { }
+
+        // 2. Add to flowDeletedPresets so default and custom presets stay deleted
+        try {
+            let deleted = [];
+            const dStored = localStorage.getItem('flowDeletedPresets');
+            if (dStored) deleted = JSON.parse(dStored);
+            if (!deleted.includes(targetName)) {
+                deleted.push(targetName);
+                localStorage.setItem('flowDeletedPresets', JSON.stringify(deleted));
+            }
+        } catch (err) { }
+
+        // Show toast
+        const toast = document.getElementById('toast');
+        if (toast) {
+            toast.innerText = `Deleted: ${targetName}`;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        loadPresets();
     }
     deleteModal.classList.remove('show');
-    presetToDeleteIndex = -1;
+    presetToDelete = null;
 });
+
+// --- Default Presets (Full collection matching screenshot) ---
+const defaultPresets = [
+    { "name": "Quart", "value": [0.77, 0, 0.175, 1] },
+    { "name": "Fast in", "value": [0.1, 0.9, 0.2, 1] },
+    { "name": "Fast Out", "value": [0.8, 0, 0.9, 0.1] },
+    { "name": "I", "value": [0.42, 0, 1, 1] },
+    { "name": "O", "value": [0, 0, 0.58, 1] },
+    { "name": "OF", "value": [0, 0, 0.2, 1] },
+    { "name": "IF", "value": [0.8, 0, 1, 1] },
+    { "name": "50 50", "value": [0.5, 0, 0.5, 1] },
+    { "name": "fast i", "value": [0.05, 0.7, 0.1, 1] },
+    { "name": "fast o", "value": [0, 0, 0.3, 1] },
+    { "name": "os", "value": [0.2, 0, 0.4, 1] },
+    { "name": "cubic", "value": [0.65, 0.05, 0.35, 1] },
+    { "name": "is", "value": [0.4, 0.1, 0.7, 1] },
+    { "name": "i fek", "value": [0.6, 0.05, 0.8, 0.95] },
+    { "name": "o fek", "value": [0.05, 0.6, 0.95, 0.8] },
+    { "name": "iFF", "value": [0.9, 0.05, 0.95, 0.5] },
+    { "name": "OFF", "value": [0.05, 0.5, 0.1, 0.95] },
+    { "name": "Turbo", "value": [0.15, 0.85, 0.35, 1.2] },
+    { "name": "E Turbo", "value": [0.2, 1.1, 0.4, 1] },
+    { "name": "io", "value": [0.42, 0, 0.58, 1] },
+    { "name": "Snappy", "value": [0.1, 1, 0.1, 1] },
+    { "name": "Smooth", "value": [0.6, 0.1, 0.2, 1] },
+    { "name": "Back Out", "value": [0.175, 0.885, 0.32, 1.275] },
+    { "name": "Linear", "value": [0, 0, 1, 1] }
+];
 
 // --- Presets Loading ---
 function drawMiniCurve(canvasEl, pt1, pt2) {
@@ -599,7 +734,9 @@ function drawMiniCurve(canvasEl, pt1, pt2) {
     const w = canvasEl.width;
     const h = canvasEl.height;
 
-    const padding = 4;
+    ctx.clearRect(0, 0, w, h);
+
+    const padding = 6;
     const drawW = w - padding * 2;
     const drawH = h - padding * 2;
 
@@ -609,9 +746,10 @@ function drawMiniCurve(canvasEl, pt1, pt2) {
     const p2 = { x: padding + pt2.x * drawW, y: (h - padding) - pt2.y * drawH };
     const p3 = { x: w - padding, y: padding };
 
-    // Draw handles (dynamic color line)
+    // Handles line
     ctx.strokeStyle = accentColor;
-    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.5;
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.moveTo(p0.x, p0.y);
     ctx.lineTo(p1.x, p1.y);
@@ -621,90 +759,141 @@ function drawMiniCurve(canvasEl, pt1, pt2) {
     ctx.moveTo(p3.x, p3.y);
     ctx.lineTo(p2.x, p2.y);
     ctx.stroke();
+    ctx.globalAlpha = 1.0;
 
-    // Draw bezier curve
+    // Bezier curve (crisp white)
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(p0.x, p0.y);
     ctx.bezierCurveTo(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
     ctx.stroke();
 
-    // Draw control point handles
+    // Control point handles (accent glowing circle)
     ctx.fillStyle = accentColor;
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.2;
 
     ctx.beginPath();
-    ctx.arc(p1.x, p1.y, 3, 0, Math.PI * 2);
+    ctx.arc(p1.x, p1.y, 2.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.arc(p2.x, p2.y, 3, 0, Math.PI * 2);
+    ctx.arc(p2.x, p2.y, 2.5, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
 }
 
 async function loadPresets() {
     try {
-        let presets = [];
+        let basePresets = [];
 
-        // Only load custom presets from localStorage (no defaults)
+        // 1. Try loading from presets.json or use defaultPresets
+        try {
+            if (isCEP && fs && path) {
+                const extPath = csInterface.getSystemPath(SystemPath.EXTENSION);
+                const presetsFile = path.join(extPath, 'data', 'presets.json');
+                if (fs.existsSync(presetsFile)) {
+                    basePresets = JSON.parse(fs.readFileSync(presetsFile, 'utf8'));
+                }
+            }
+        } catch (e) { }
+
+        if (!basePresets || basePresets.length === 0) {
+            try {
+                const res = await fetch('../data/presets.json');
+                if (res.ok) basePresets = await res.json();
+            } catch (e) { }
+        }
+
+        if (!basePresets || basePresets.length === 0) {
+            basePresets = [...defaultPresets];
+        }
+
+        // 2. Append custom presets from localStorage
+        let customPresets = [];
         try {
             const stored = localStorage.getItem('flowCustomPresets');
             if (stored) {
                 const custom = JSON.parse(stored);
-                presets = presets.concat(custom);
+                if (Array.isArray(custom)) {
+                    customPresets = custom;
+                }
+            }
+        } catch (e) { }
+
+        // Combine base presets and custom presets
+        let presets = basePresets.concat(customPresets);
+
+        // 3. Filter out any presets recorded in flowDeletedPresets
+        try {
+            const dStored = localStorage.getItem('flowDeletedPresets');
+            if (dStored) {
+                const deletedNames = JSON.parse(dStored);
+                if (Array.isArray(deletedNames) && deletedNames.length > 0) {
+                    presets = presets.filter(p => !deletedNames.includes(p.name));
+                }
             }
         } catch (e) { }
 
         const grid = document.getElementById('presetsGrid');
+        if (!grid) return;
         grid.innerHTML = ''; // clear before repopulating
 
         presets.forEach((preset, index) => {
+            const item = document.createElement('div');
+            item.className = 'preset-item';
+
             const card = document.createElement('div');
             card.className = 'preset-card';
 
+            // Show delete button for ALL presets (default and custom)
             const delBtn = document.createElement('button');
             delBtn.className = 'delete-btn';
             delBtn.innerHTML = '&times;';
-            delBtn.title = 'Delete Preset';
+            delBtn.setAttribute('aria-label', `Delete "${preset.name}"`);
 
             delBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                presetToDeleteIndex = index;
+                presetToDelete = preset;
                 deleteModalText.innerText = `Delete preset "${preset.name}"?`;
                 deleteModal.classList.add('show');
             });
+            card.appendChild(delBtn);
 
             const pt1 = { x: preset.value[0], y: preset.value[1] };
             const pt2 = { x: preset.value[2], y: preset.value[3] };
             const thumb = document.createElement('canvas');
-            thumb.width = 48;
-            thumb.height = 48;
+            thumb.width = 60;
+            thumb.height = 60;
             drawMiniCurve(thumb, pt1, pt2);
 
             const label = document.createElement('div');
             label.className = 'preset-label';
             label.innerText = preset.name;
+            label.setAttribute('aria-label', preset.name);
 
-            card.appendChild(delBtn);
             card.appendChild(thumb);
-            card.appendChild(label);
+            item.appendChild(card);
+            item.appendChild(label);
 
-            card.addEventListener('click', () => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.preset-item').forEach(el => el.classList.remove('active'));
+                item.classList.add('active');
+
                 const targetMode = preset.type || 'value';
                 if (typeof window.switchMode === 'function') {
                     window.switchMode(targetMode);
                 }
                 
                 if (targetMode === 'value' || targetMode === 'bezier') {
-                    setTimeout(() => animateCurveTo(pt1, pt2), 50);
+                    setTimeout(() => animateCurveTo(pt1, pt2), 40);
                 }
             });
 
-            grid.appendChild(card);
+            grid.appendChild(item);
         });
     } catch (e) {
         console.error("Failed to load presets", e);
@@ -715,6 +904,25 @@ async function loadPresets() {
 resizeCanvas();
 render();
 loadPresets();
+
+// Restore default presets button handler
+const restoreDefaultPresetsBtn = document.getElementById('restoreDefaultPresetsBtn');
+if (restoreDefaultPresetsBtn) {
+    restoreDefaultPresetsBtn.addEventListener('click', () => {
+        try {
+            localStorage.removeItem('flowDeletedPresets');
+            loadPresets();
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.innerText = 'Default presets restored!';
+                toast.classList.add('show');
+                setTimeout(() => {
+                    toast.classList.remove('show');
+                }, 2000);
+            }
+        } catch (e) { }
+    });
+}
 
 // Observe the canvas container for size changes (must be after render is ready)
 const canvasContainer = document.querySelector('.canvas-container');
@@ -729,13 +937,9 @@ const appBgBtn = document.getElementById('appBgBtn');
 const appBgInput = document.getElementById('appBgInput');
 const appContainer = document.querySelector('.app-container');
 
-let fs = null;
-let path = null;
 let userDataDir = "";
-if (isCEP) {
+if (isCEP && fs && path) {
     try {
-        fs = require('fs');
-        path = require('path');
         const extPath = csInterface.getSystemPath(SystemPath.EXTENSION);
         userDataDir = path.join(extPath, 'userData');
         if (!fs.existsSync(userDataDir)) {
@@ -822,50 +1026,20 @@ if (bgBtn && bgInput) {
     });
 }
 
-const colorPickerBtn = document.getElementById('colorPickerBtn');
-const hiddenColorInput = document.getElementById('hiddenColorInput');
-
-if (colorPickerBtn && hiddenColorInput) {
-    colorPickerBtn.style.backgroundColor = accentColor;
-    hiddenColorInput.value = accentColor;
+function setGlobalAccentColor(newColor) {
+    if (!newColor) return;
+    accentColor = newColor;
+    try {
+        localStorage.setItem('flowAccentColor', accentColor);
+        const s = JSON.parse(localStorage.getItem('flowSettings') || '{}');
+        s.accentColor = accentColor;
+        localStorage.setItem('flowSettings', JSON.stringify(s));
+    } catch (e) { }
     document.documentElement.style.setProperty('--dynamic-accent', accentColor);
-
-    function updateColor(newColor) {
-        accentColor = newColor;
-        colorPickerBtn.style.backgroundColor = accentColor;
-        hiddenColorInput.value = accentColor;
-        document.documentElement.style.setProperty('--dynamic-accent', accentColor);
-        render();
-    }
-
-    function saveColor(newColor) {
-        updateColor(newColor);
-        try { localStorage.setItem('flowAccentColor', accentColor); } catch (err) { }
-        loadPresets();
-    }
-
-    colorPickerBtn.addEventListener('click', async () => {
-        if ('EyeDropper' in window) {
-            try {
-                const eyeDropper = new EyeDropper();
-                const result = await eyeDropper.open();
-                saveColor(result.sRGBHex);
-            } catch (err) {
-                // User canceled the eyedropper, do nothing
-            }
-        } else {
-            // Fallback for CEP/Browsers that don't support EyeDropper
-            hiddenColorInput.click();
-        }
-    });
-
-    hiddenColorInput.addEventListener('input', (e) => {
-        updateColor(e.target.value);
-    });
-
-    hiddenColorInput.addEventListener('change', (e) => {
-        saveColor(e.target.value);
-    });
+    document.documentElement.style.setProperty('--accent', accentColor);
+    document.documentElement.style.setProperty('--dynamic-accent-rgb', hexToRgbValues(accentColor));
+    if (typeof render === 'function') render();
+    if (typeof loadPresets === 'function') loadPresets();
 }
 
 
@@ -979,3 +1153,246 @@ tabBtns.forEach(btn => {
         window.switchMode(btn.getAttribute('data-target'));
     });
 });
+
+// ==========================================
+// SETTINGS UI LOGIC (Slider, Toggle, Storage)
+// ==========================================
+(() => {
+    const root = document.documentElement;
+
+    const toggleWallpaper  = document.getElementById("toggleWallpaper");
+    const sliderDimmer     = document.getElementById("sliderDimmer");
+    const valDimmer        = document.getElementById("valDimmer");
+    const sliderBgOpacity  = document.getElementById("sliderBgOpacity");
+    const valBgOpacity     = document.getElementById("valBgOpacity");
+    const sliderBlur       = document.getElementById("sliderBlur");
+    const valBlur          = document.getElementById("valBlur");
+    const glassSegments    = document.querySelectorAll(".settings-card .segment");
+    const hiddenColorInput = document.getElementById("hiddenColorInput");
+    const colorPickerBtn   = document.getElementById("colorPickerBtn");
+
+    // --- Helpers ---
+    const getAccent = () => (hiddenColorInput ? hiddenColorInput.value.toUpperCase() : (accentColor || '#FF2A75'));
+
+    const updateColorPickerUI = (color) => {
+        if (!color) return;
+        color = color.toUpperCase();
+        if (colorPickerBtn) {
+            colorPickerBtn.style.backgroundColor = color;
+            const hexText = colorPickerBtn.querySelector('.hex-text');
+            if (hexText) hexText.textContent = color;
+        }
+        if (hiddenColorInput) {
+            hiddenColorInput.value = color;
+        }
+        // Sync swatch active state
+        document.querySelectorAll('.color-swatch').forEach(s => {
+            const sc = s.dataset.color ? s.dataset.color.toUpperCase() : '';
+            s.classList.toggle('active', sc === color);
+        });
+    };
+
+    const updateSlider = (slider, textEl, suffix) => {
+        if (!slider) return;
+        const val     = parseFloat(slider.value);
+        const min     = parseFloat(slider.min)  || 0;
+        const max     = parseFloat(slider.max)  || 100;
+        const pct     = ((val - min) / (max - min)) * 100;
+        const accent  = getAccent();
+        slider.style.background = `linear-gradient(to right, ${accent} ${pct}%, rgba(255,255,255,0.1) ${pct}%)`;
+        if (textEl) textEl.textContent = val + suffix;
+    };
+
+    const updateAllSliders = () => {
+        updateSlider(sliderDimmer,    valDimmer,    "%");
+        updateSlider(sliderBgOpacity, valBgOpacity, "%");
+        updateSlider(sliderBlur,      valBlur,      "px");
+    };
+
+    // --- Apply to CSS & JS ---
+    const applySettings = (s) => {
+        // Wallpaper visibility
+        const appContainer = document.querySelector('.app-container');
+        if (appContainer) {
+            appContainer.classList.toggle('hide-wallpaper', !s.wallpaperVisible);
+        }
+
+        root.style.setProperty('--wallpaper-dimmer-opacity', (s.wallpaperDimmer / 100).toFixed(2));
+        root.style.setProperty('--glass-bg-opacity',         (s.bgOpacity / 100).toFixed(2));
+        root.style.setProperty('--glass-blur-amount',        s.blurIntensity + 'px');
+
+        // Accent color — propagate everywhere
+        accentColor = s.accentColor;
+        try {
+            localStorage.setItem('flowAccentColor', s.accentColor);
+        } catch(e) {}
+        root.style.setProperty('--dynamic-accent', s.accentColor);
+        root.style.setProperty('--accent',         s.accentColor);
+        root.style.setProperty('--dynamic-accent-rgb', hexToRgbValues(s.accentColor));
+
+        // Neon glow
+        if (s.neonGlow) {
+            root.style.setProperty('--neon-glow-opacity', '1');
+            root.style.setProperty('--neon-glow-spread',  '14px');
+        } else {
+            root.style.setProperty('--neon-glow-opacity', '0.6');
+            root.style.setProperty('--neon-glow-spread',  '0px');
+        }
+
+        // Glass border (use integer for safe compare)
+        const idx = parseInt(s.borderStyleIndex, 10);
+        let borderCSS = '1px solid rgba(255, 255, 255, 0.13)';
+        let shadowCSS = 'inset 0 1px 1.5px rgba(255, 255, 255, 0.24), inset 0 -1px 2px rgba(0, 0, 0, 0.3), 0 8px 26px rgba(0, 0, 0, 0.45)';
+        if (idx === 0) {
+            borderCSS = 'none';
+            shadowCSS = 'none';
+        } else if (idx === 2) {
+            borderCSS = `1.5px solid ${s.accentColor}`;
+            shadowCSS = `inset 0 1px 1.5px rgba(255, 255, 255, 0.35), 0 0 16px ${hexToRgba(s.accentColor, 0.7)}, 0 0 30px ${hexToRgba(s.accentColor, 0.35)}`;
+        }
+        root.style.setProperty('--glass-border-style', borderCSS);
+        root.style.setProperty('--glass-box-shadow',   shadowCSS);
+
+        // Immediately synchronize curve graph and preset thumbnails
+        if (typeof render === 'function') render();
+        if (typeof loadPresets === 'function') loadPresets();
+    };
+
+    // --- Load from localStorage ---
+    const loadSettings = () => {
+        const defaults = {
+            wallpaperVisible: true,
+            wallpaperDimmer: 40,
+            bgOpacity: 55,
+            blurIntensity: 18,
+            borderStyleIndex: 1,
+            accentColor: accentColor || '#FF2A75',
+            neonGlow: true
+        };
+        const saved = Object.assign(defaults, JSON.parse(localStorage.getItem("flowSettings") || "{}"));
+        if (saved.bgOpacity !== undefined && saved.bgOpacity <= 5) {
+            saved.bgOpacity = 55;
+        }
+
+        if (toggleWallpaper) toggleWallpaper.checked = saved.wallpaperVisible;
+        if (sliderDimmer)    sliderDimmer.value       = saved.wallpaperDimmer;
+        if (sliderBgOpacity) sliderBgOpacity.value    = saved.bgOpacity;
+        if (sliderBlur)      sliderBlur.value         = saved.blurIntensity;
+
+        // Segments
+        const idx = parseInt(saved.borderStyleIndex, 10);
+        glassSegments.forEach((b, i) => b.classList.toggle("active", i === idx));
+
+        // Color picker
+        updateColorPickerUI(saved.accentColor);
+
+        applySettings(saved);
+        updateAllSliders();
+    };
+
+    // --- Save to localStorage ---
+    const saveSettings = () => {
+        let activeIdx = 1;
+        glassSegments.forEach((seg, i) => { if (seg.classList.contains("active")) activeIdx = i; });
+
+        const currentAccent = getAccent();
+        accentColor = currentAccent;
+
+        const s = {
+            wallpaperVisible:  toggleWallpaper  ? toggleWallpaper.checked  : true,
+            wallpaperDimmer:   sliderDimmer     ? parseFloat(sliderDimmer.value)    : 40,
+            bgOpacity:         sliderBgOpacity  ? parseFloat(sliderBgOpacity.value) : 3,
+            blurIntensity:     sliderBlur       ? parseFloat(sliderBlur.value)      : 16,
+            borderStyleIndex:  activeIdx,
+            accentColor:       currentAccent
+        };
+
+        try {
+            localStorage.setItem("flowSettings", JSON.stringify(s));
+            localStorage.setItem("flowAccentColor", currentAccent);
+        } catch(e) {}
+        applySettings(s);
+    };
+
+    // --- Event listeners ---
+    if (toggleWallpaper) toggleWallpaper.addEventListener("change", saveSettings);
+
+    if (sliderDimmer)    sliderDimmer.addEventListener("input",    () => { updateSlider(sliderDimmer,    valDimmer,    "%");  saveSettings(); });
+    if (sliderBgOpacity) sliderBgOpacity.addEventListener("input", () => { updateSlider(sliderBgOpacity, valBgOpacity, "%");  saveSettings(); });
+    if (sliderBlur)      sliderBlur.addEventListener("input",      () => { updateSlider(sliderBlur,      valBlur,      "px"); saveSettings(); });
+
+    glassSegments.forEach(btn => {
+        btn.addEventListener("click", () => {
+            glassSegments.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            saveSettings();
+        });
+    });
+
+    if (hiddenColorInput && colorPickerBtn) {
+        colorPickerBtn.addEventListener("click", async () => {
+            if ('EyeDropper' in window) {
+                try {
+                    const eyeDropper = new EyeDropper();
+                    const result = await eyeDropper.open();
+                    updateColorPickerUI(result.sRGBHex.toUpperCase());
+                    saveSettings();
+                    updateAllSliders();
+                    return;
+                } catch (err) {}
+            }
+            hiddenColorInput.click();
+        });
+        hiddenColorInput.addEventListener("input", (e) => {
+            updateColorPickerUI(e.target.value.toUpperCase());
+            saveSettings();
+            updateAllSliders();
+        });
+        hiddenColorInput.addEventListener("change", (e) => {
+            updateColorPickerUI(e.target.value.toUpperCase());
+            saveSettings();
+            updateAllSliders();
+        });
+    }
+
+    // Color swatch preset clicks
+    document.querySelectorAll('.color-swatch').forEach(swatch => {
+        swatch.addEventListener('click', () => {
+            const color = swatch.dataset.color;
+            if (color) {
+                updateColorPickerUI(color);
+                saveSettings();
+                updateAllSliders();
+            }
+        });
+    });
+    // --- Layer & Timeline Tools Event Listeners ---
+    const toolBtns = [
+        { id: "btnTrimLeft", script: "trimLayerLeft()" },
+        { id: "btnTrimRight", script: "trimLayerRight()" },
+        { id: "btnSplitLayer", script: "splitLayerAtCTI()" },
+        { id: "btnPrevMarker", script: "goToPrevMarker()" },
+        { id: "btnNextMarker", script: "goToNextMarker()" }
+    ];
+
+    toolBtns.forEach(btnInfo => {
+        const el = document.getElementById(btnInfo.id);
+        if (el) {
+            el.addEventListener("click", () => {
+                if (!isCEP) {
+                    console.log(`[MOCK MODE] Executed: ${btnInfo.script}`);
+                    return;
+                }
+                if (!csInterface) return;
+                
+                csInterface.evalScript(btnInfo.script, (result) => {
+                    if (result === "error" || result === "undefined" || result === "EvalScript error.") {
+                        console.error(`Failed to execute ${btnInfo.script}. Result:`, result);
+                    }
+                });
+            });
+        }
+    });
+
+    loadSettings();
+})();
