@@ -38,14 +38,33 @@ html {
 
 body {
     background-color: var(--bg-main);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     color: var(--text-primary);
     font-family: var(--font-family);
     font-size: clamp(11px, 3.5vw, 14px);
     overflow-x: hidden;
     overflow-y: hidden;
     user-select: none;
-    height: 100%;
+    height: 100vh;
+    width: 100vw;
     margin: 0;
+}
+
+/* Wallpaper Dimmer Overlay */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, var(--wallpaper-dimmer-opacity));
+    pointer-events: none;
+    z-index: -1;
+}
+
+body.hide-wallpaper {
+    background-image: none !important;
 }
 
 /* Global clean focus reset - Remove white focus ring / box outline on click */
@@ -732,28 +751,7 @@ input:focus-visible {
     position: relative;
     padding-bottom: 56px; /* Space for navbar */
     box-sizing: border-box;
-    
-    /* Global Wallpaper */
-    background-color: var(--bg-main);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    z-index: 1; /* For ::before to sit behind */
-}
-
-/* Wallpaper Dimmer Overlay */
-.app-container::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, var(--wallpaper-dimmer-opacity));
-    pointer-events: none;
-    z-index: -1;
-}
-
-.app-container.hide-wallpaper {
-    background-image: none !important;
+    z-index: 1;
 }
 
 .panel-view {

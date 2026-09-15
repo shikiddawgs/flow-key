@@ -982,8 +982,8 @@ try {
         if (cCont) { cCont.style.backdropFilter = 'blur(16px)'; cCont.style.webkitBackdropFilter = 'blur(16px)'; }
     }
     const storedAppBg = loadLongData('flowAppBg');
-    if (storedAppBg && appContainer) {
-        appContainer.style.backgroundImage = `linear-gradient(rgba(26, 26, 28, 0.70), rgba(26, 26, 28, 0.70)), url(${storedAppBg})`;
+    if (storedAppBg) {
+        document.body.style.backgroundImage = `linear-gradient(rgba(26, 26, 28, 0.70), rgba(26, 26, 28, 0.70)), url(${storedAppBg})`;
     }
 } catch (e) { }
 
@@ -997,7 +997,7 @@ if (appBgBtn && appBgInput) {
         const reader = new FileReader();
         reader.onload = function (evt) {
             const dataUrl = evt.target.result;
-            if (appContainer) appContainer.style.backgroundImage = `linear-gradient(rgba(26, 26, 28, 0.75), rgba(26, 26, 28, 0.75)), url(${dataUrl})`;
+            document.body.style.backgroundImage = `linear-gradient(rgba(26, 26, 28, 0.75), rgba(26, 26, 28, 0.75)), url(${dataUrl})`;
             saveLongData('flowAppBg', dataUrl);
         };
         reader.readAsDataURL(file);
@@ -1094,7 +1094,7 @@ const clearAppBgBtn = document.getElementById('clearAppBgBtn');
 if (clearAppBgBtn) {
     clearAppBgBtn.addEventListener('click', () => {
         removeLongData('flowAppBg');
-        if (appContainer) appContainer.style.backgroundImage = 'none';
+        document.body.style.backgroundImage = 'none';
         saveLongData('flowAppBg', '');
     });
 }
@@ -1212,10 +1212,7 @@ tabBtns.forEach(btn => {
     // --- Apply to CSS & JS ---
     const applySettings = (s) => {
         // Wallpaper visibility
-        const appContainer = document.querySelector('.app-container');
-        if (appContainer) {
-            appContainer.classList.toggle('hide-wallpaper', !s.wallpaperVisible);
-        }
+        document.body.classList.toggle('hide-wallpaper', !s.wallpaperVisible);
 
         root.style.setProperty('--wallpaper-dimmer-opacity', (s.wallpaperDimmer / 100).toFixed(2));
         root.style.setProperty('--glass-bg-opacity',         (s.bgOpacity / 100).toFixed(2));
