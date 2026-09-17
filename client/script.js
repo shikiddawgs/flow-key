@@ -29,7 +29,8 @@ try {
 
         var extPath = csInterface.getSystemPath(SystemPath.EXTENSION);
         var hostPath = extPath + '/host/index.jsx';
-        csInterface.evalScript('$.evalFile("' + hostPath + '")');
+        var binPath = extPath + '/host/index.jsxbin';
+        csInterface.evalScript('try { $.evalFile("' + hostPath + '"); } catch(e) { $.evalFile("' + binPath + '"); }');
     }
 } catch (e) {
     console.warn("Not running in CEP environment.");
@@ -1511,9 +1512,6 @@ tabBtns.forEach(btn => {
             neonGlow: true
         };
         const saved = Object.assign(defaults, JSON.parse(localStorage.getItem("flowSettings") || "{}"));
-        if (saved.bgOpacity !== undefined && saved.bgOpacity <= 5) {
-            saved.bgOpacity = 55;
-        }
 
         if (toggleWallpaper) toggleWallpaper.checked = saved.wallpaperVisible;
         if (sliderDimmer)    sliderDimmer.value       = saved.wallpaperDimmer;
