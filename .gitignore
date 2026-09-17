@@ -1,1 +1,4 @@
 userData/
+
+node_modules/
+dist/

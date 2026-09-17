@@ -620,23 +620,12 @@ confirmSaveBtn.addEventListener('click', () => {
 
     let customPresets = [];
     try {
-        const stored = localStorage.getItem('flowCustomPresets');
+        const stored = localStorage.getItem('kidfaster_graph_presets');
         if (stored) customPresets = JSON.parse(stored);
     } catch (e) { }
 
     customPresets.push(newPreset);
-    localStorage.setItem('flowCustomPresets', JSON.stringify(customPresets));
-
-    // Remove from deleted list if it was previously deleted
-    try {
-        let deleted = [];
-        const dStored = localStorage.getItem('flowDeletedPresets');
-        if (dStored) deleted = JSON.parse(dStored);
-        if (deleted.includes(name)) {
-            deleted = deleted.filter(n => n !== name);
-            localStorage.setItem('flowDeletedPresets', JSON.stringify(deleted));
-        }
-    } catch (e) { }
+    localStorage.setItem('kidfaster_graph_presets', JSON.stringify(customPresets));
 
     // Show toast
     const toast = document.getElementById('toast');
@@ -668,26 +657,14 @@ confirmDeleteBtn.addEventListener('click', () => {
     if (presetToDelete) {
         const targetName = presetToDelete.name;
 
-        // 1. Remove from flowCustomPresets if present
         try {
-            const stored = localStorage.getItem('flowCustomPresets');
+            const stored = localStorage.getItem('kidfaster_graph_presets');
             if (stored) {
                 let customPresets = JSON.parse(stored);
                 if (Array.isArray(customPresets)) {
                     customPresets = customPresets.filter(p => p.name !== targetName);
-                    localStorage.setItem('flowCustomPresets', JSON.stringify(customPresets));
+                    localStorage.setItem('kidfaster_graph_presets', JSON.stringify(customPresets));
                 }
-            }
-        } catch (err) { }
-
-        // 2. Add to flowDeletedPresets so default and custom presets stay deleted
-        try {
-            let deleted = [];
-            const dStored = localStorage.getItem('flowDeletedPresets');
-            if (dStored) deleted = JSON.parse(dStored);
-            if (!deleted.includes(targetName)) {
-                deleted.push(targetName);
-                localStorage.setItem('flowDeletedPresets', JSON.stringify(deleted));
             }
         } catch (err) { }
 
@@ -707,33 +684,7 @@ confirmDeleteBtn.addEventListener('click', () => {
     presetToDelete = null;
 });
 
-// --- Default Presets (Full collection matching screenshot) ---
-const defaultPresets = [
-    { "name": "Quart", "value": [0.77, 0, 0.175, 1] },
-    { "name": "Fast in", "value": [0.1, 0.9, 0.2, 1] },
-    { "name": "Fast Out", "value": [0.8, 0, 0.9, 0.1] },
-    { "name": "I", "value": [0.42, 0, 1, 1] },
-    { "name": "O", "value": [0, 0, 0.58, 1] },
-    { "name": "OF", "value": [0, 0, 0.2, 1] },
-    { "name": "IF", "value": [0.8, 0, 1, 1] },
-    { "name": "50 50", "value": [0.5, 0, 0.5, 1] },
-    { "name": "fast i", "value": [0.05, 0.7, 0.1, 1] },
-    { "name": "fast o", "value": [0, 0, 0.3, 1] },
-    { "name": "os", "value": [0.2, 0, 0.4, 1] },
-    { "name": "cubic", "value": [0.65, 0.05, 0.35, 1] },
-    { "name": "is", "value": [0.4, 0.1, 0.7, 1] },
-    { "name": "i fek", "value": [0.6, 0.05, 0.8, 0.95] },
-    { "name": "o fek", "value": [0.05, 0.6, 0.95, 0.8] },
-    { "name": "iFF", "value": [0.9, 0.05, 0.95, 0.5] },
-    { "name": "OFF", "value": [0.05, 0.5, 0.1, 0.95] },
-    { "name": "Turbo", "value": [0.15, 0.85, 0.35, 1.2] },
-    { "name": "E Turbo", "value": [0.2, 1.1, 0.4, 1] },
-    { "name": "io", "value": [0.42, 0, 0.58, 1] },
-    { "name": "Snappy", "value": [0.1, 1, 0.1, 1] },
-    { "name": "Smooth", "value": [0.6, 0.1, 0.2, 1] },
-    { "name": "Back Out", "value": [0.175, 0.885, 0.32, 1.275] },
-    { "name": "Linear", "value": [0, 0, 1, 1] }
-];
+// Default Presets removed - now dynamically loading my_presets.json for dev backup.
 
 // --- Presets Loading ---
 function drawMiniCurve(canvasEl, pt1, pt2) {
@@ -795,59 +746,101 @@ function drawMiniCurve(canvasEl, pt1, pt2) {
 
 async function loadPresets() {
     try {
-        let basePresets = [];
+        let presets = [];
+        let stored = localStorage.getItem('kidfaster_graph_presets');
+        let currentPresets = [];
 
-        // 1. Try loading from presets.json or use defaultPresets
+        if (stored && stored !== '[]') {
+            try {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) currentPresets = parsed;
+            } catch(e) {}
+        }
+        
+        // Developer auto-restore check using Windows username
+        let isDev = false;
         try {
-            if (isCEP && fs && path) {
-                const extPath = csInterface.getSystemPath(SystemPath.EXTENSION);
-                const presetsFile = path.join(extPath, 'data', 'presets.json');
-                if (fs.existsSync(presetsFile)) {
-                    basePresets = JSON.parse(fs.readFileSync(presetsFile, 'utf8'));
+            if (typeof csInterface !== "undefined") {
+                const userDataPath = csInterface.getSystemPath(SystemPath.USER_DATA);
+                if (userDataPath && userDataPath.toLowerCase().includes('kidoskie')) {
+                    isDev = true;
                 }
             }
-        } catch (e) { }
-
-        if (!basePresets || basePresets.length === 0) {
+        } catch (e) {}
+        
+        if (isDev) {
+            const devPresetsFallback = [
+                { "name": "Quart", "value": [0.77, 0, 0.175, 1] },
+                { "name": "Fast in", "value": [0.1, 0.9, 0.2, 1] },
+                { "name": "Fast Out", "value": [0.8, 0, 0.9, 0.1] },
+                { "name": "I", "value": [0.42, 0, 1, 1] },
+                { "name": "O", "value": [0, 0, 0.58, 1] },
+                { "name": "OF", "value": [0, 0, 0.2, 1] },
+                { "name": "IF", "value": [0.8, 0, 1, 1] },
+                { "name": "50 50", "value": [0.5, 0, 0.5, 1] },
+                { "name": "fast i", "value": [0.05, 0.7, 0.1, 1] },
+                { "name": "fast o", "value": [0, 0, 0.3, 1] },
+                { "name": "os", "value": [0.2, 0, 0.4, 1] },
+                { "name": "cubic", "value": [0.65, 0.05, 0.35, 1] },
+                { "name": "is", "value": [0.4, 0.1, 0.7, 1] },
+                { "name": "i fek", "value": [0.6, 0.05, 0.8, 0.95] },
+                { "name": "o fek", "value": [0.05, 0.6, 0.95, 0.8] },
+                { "name": "iFF", "value": [0.9, 0.05, 0.95, 0.5] },
+                { "name": "OFF", "value": [0.05, 0.5, 0.1, 0.95] },
+                { "name": "Turbo", "value": [0.15, 0.85, 0.35, 1.2] },
+                { "name": "E Turbo", "value": [0.2, 1.1, 0.4, 1] },
+                { "name": "io", "value": [0.42, 0, 0.58, 1] },
+                { "name": "Snappy", "value": [0.1, 1, 0.1, 1] },
+                { "name": "Smooth", "value": [0.6, 0.1, 0.2, 1] },
+                { "name": "Back Out", "value": [0.175, 0.885, 0.32, 1.275] },
+                { "name": "Linear", "value": [0, 0, 1, 1] }
+            ];
+            
+            // Merge missing defaults for developer
+            const existingNames = new Set(currentPresets.map(p => p.name));
+            let added = false;
+            devPresetsFallback.forEach(dp => {
+                if (!existingNames.has(dp.name)) {
+                    currentPresets.push(dp);
+                    added = true;
+                }
+            });
+            
+            if (added || !stored) {
+                localStorage.setItem('kidfaster_graph_presets', JSON.stringify(currentPresets));
+                stored = JSON.stringify(currentPresets);
+            }
+        } else {
+            // Not a developer, if empty state, set it up
+            if (!stored) {
+                localStorage.setItem('kidfaster_graph_presets', JSON.stringify([]));
+                stored = "[]";
+            }
+        }
+        
+        if (stored) {
             try {
-                const res = await fetch('../data/presets.json');
-                if (res.ok) basePresets = await res.json();
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) presets = parsed;
             } catch (e) { }
         }
-
-        if (!basePresets || basePresets.length === 0) {
-            basePresets = [...defaultPresets];
-        }
-
-        // 2. Append custom presets from localStorage
-        let customPresets = [];
-        try {
-            const stored = localStorage.getItem('flowCustomPresets');
-            if (stored) {
-                const custom = JSON.parse(stored);
-                if (Array.isArray(custom)) {
-                    customPresets = custom;
-                }
-            }
-        } catch (e) { }
-
-        // Combine base presets and custom presets
-        let presets = basePresets.concat(customPresets);
-
-        // 3. Filter out any presets recorded in flowDeletedPresets
-        try {
-            const dStored = localStorage.getItem('flowDeletedPresets');
-            if (dStored) {
-                const deletedNames = JSON.parse(dStored);
-                if (Array.isArray(deletedNames) && deletedNames.length > 0) {
-                    presets = presets.filter(p => !deletedNames.includes(p.name));
-                }
-            }
-        } catch (e) { }
 
         const grid = document.getElementById('presetsGrid');
         if (!grid) return;
         grid.innerHTML = ''; // clear before repopulating
+
+        if (presets.length === 0) {
+            // Empty State UI
+            const emptyState = document.createElement('div');
+            emptyState.style.padding = '20px';
+            emptyState.style.textAlign = 'center';
+            emptyState.style.color = 'rgba(255, 255, 255, 0.5)';
+            emptyState.style.fontSize = '12px';
+            emptyState.style.width = '100%';
+            emptyState.innerHTML = '<svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none" style="opacity:0.5; margin-bottom:8px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg><br>No presets saved yet.<br>Click [+] to save your active graph curve.';
+            grid.appendChild(emptyState);
+            return;
+        }
 
         presets.forEach((preset, index) => {
             const item = document.createElement('div');
@@ -856,7 +849,6 @@ async function loadPresets() {
             const card = document.createElement('div');
             card.className = 'preset-card';
 
-            // Show delete button for ALL presets (default and custom)
             const delBtn = document.createElement('button');
             delBtn.className = 'delete-btn';
             delBtn.innerHTML = '&times;';
@@ -911,6 +903,7 @@ async function loadPresets() {
     }
 }
 
+
 // Helper: re-trigger stagger animation on preset items (called on tab switch)
 function restaggerPresets() {
     const grid = document.getElementById('presetsGrid');
@@ -933,24 +926,84 @@ resizeCanvas();
 render();
 loadPresets();
 
-// Restore default presets button handler
-const restoreDefaultPresetsBtn = document.getElementById('restoreDefaultPresetsBtn');
-if (restoreDefaultPresetsBtn) {
-    restoreDefaultPresetsBtn.addEventListener('click', () => {
-        try {
-            localStorage.removeItem('flowDeletedPresets');
-            loadPresets();
-            const toast = document.getElementById('toast');
-            if (toast) {
-                toast.innerText = 'Default presets restored!';
-                toast.classList.add('show');
-                setTimeout(() => {
-                    toast.classList.remove('show');
-                }, 2000);
+// Import / Export Logic
+function exportPresets() {
+    try {
+        const stored = localStorage.getItem('kidfaster_graph_presets') || '[]';
+        const blob = new Blob([stored], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'KidFaster_Presets.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (err) {
+        console.error("Export failed", err);
+    }
+}
+
+function importPresets(file) {
+    try {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (Array.isArray(data)) {
+                    const existing = JSON.parse(localStorage.getItem('kidfaster_graph_presets') || '[]');
+                    const combined = existing.concat(data);
+                    
+                    // Simple deduplication by name
+                    const unique = [];
+                    const names = new Set();
+                    for (const p of combined) {
+                        if (!names.has(p.name)) {
+                            unique.push(p);
+                            names.add(p.name);
+                        }
+                    }
+                    
+                    localStorage.setItem('kidfaster_graph_presets', JSON.stringify(unique));
+                    loadPresets();
+                    
+                    const toast = document.getElementById('toast');
+                    if (toast) {
+                        toast.innerText = 'Presets Imported!';
+                        toast.classList.add('show');
+                        setTimeout(() => { toast.classList.remove('show'); }, 2000);
+                    }
+                }
+            } catch (parseErr) {
+                alert("Invalid Preset File");
             }
-        } catch (e) { }
+        };
+        reader.readAsText(file);
+    } catch (err) {
+        console.error("Import failed", err);
+    }
+}
+
+const exportPresetsBtn = document.getElementById('exportPresetsBtn');
+if (exportPresetsBtn) {
+    exportPresetsBtn.addEventListener('click', exportPresets);
+}
+
+const importPresetsBtn = document.getElementById('importPresetsBtn');
+const importPresetsInput = document.getElementById('importPresetsInput');
+if (importPresetsBtn && importPresetsInput) {
+    importPresetsBtn.addEventListener('click', () => {
+        importPresetsInput.click();
+    });
+    importPresetsInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            importPresets(e.target.files[0]);
+        }
+        // Reset input so the same file can be selected again
+        e.target.value = '';
     });
 }
+
 
 // Observe the canvas container for size changes (must be after render is ready)
 const canvasContainer = document.querySelector('.canvas-container');
