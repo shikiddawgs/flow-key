@@ -1346,18 +1346,35 @@ tabBtns.forEach(btn => {
     });
 
     // --- Slider Events ---
-    if (sliderAmp) sliderAmp.addEventListener('input', () => {
-        updateBounceSlider(sliderAmp, valAmp, 2);
+    const handleSliderApply = () => {
         presetBtns.forEach(b => b.classList.remove('active'));
-    });
-    if (sliderFreq) sliderFreq.addEventListener('input', () => {
-        updateBounceSlider(sliderFreq, valFreq, 1);
-        presetBtns.forEach(b => b.classList.remove('active'));
-    });
-    if (sliderDecay) sliderDecay.addEventListener('input', () => {
-        updateBounceSlider(sliderDecay, valDecay, 1);
-        presetBtns.forEach(b => b.classList.remove('active'));
-    });
+        const amp   = parseFloat(sliderAmp.value);
+        const freq  = parseFloat(sliderFreq.value);
+        const decay = parseFloat(sliderDecay.value);
+        callApplyBounce(amp, freq, decay);
+    };
+
+    if (sliderAmp) {
+        sliderAmp.addEventListener('input', () => {
+            updateBounceSlider(sliderAmp, valAmp, 2);
+            handleSliderApply();
+        });
+        sliderAmp.addEventListener('change', handleSliderApply);
+    }
+    if (sliderFreq) {
+        sliderFreq.addEventListener('input', () => {
+            updateBounceSlider(sliderFreq, valFreq, 1);
+            handleSliderApply();
+        });
+        sliderFreq.addEventListener('change', handleSliderApply);
+    }
+    if (sliderDecay) {
+        sliderDecay.addEventListener('input', () => {
+            updateBounceSlider(sliderDecay, valDecay, 1);
+            handleSliderApply();
+        });
+        sliderDecay.addEventListener('change', handleSliderApply);
+    }
 
     // --- Apply Custom Button ---
     if (applyBtn) applyBtn.addEventListener('click', () => {
