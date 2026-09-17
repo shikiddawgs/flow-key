@@ -1376,17 +1376,11 @@ tabBtns.forEach(btn => {
         sliderDecay.addEventListener('change', handleSliderApply);
     }
 
-    // --- Apply Custom Button ---
-    if (applyBtn) applyBtn.addEventListener('click', () => {
-        const amp   = parseFloat(sliderAmp.value);
-        const freq  = parseFloat(sliderFreq.value);
-        const decay = parseFloat(sliderDecay.value);
-        callApplyBounce(amp, freq, decay);
-    });
-
-    // --- Remove Bounce Button ---
+    // --- Remove Button ---
     if (removeBtn) removeBtn.addEventListener('click', () => {
-        callRemoveBounce();
+        if (isCEP && csInterface) {
+            csInterface.evalScript(`removeBounceExpression("${selectedProp}")`);
+        }
     });
 
     // Init slider fills on load
