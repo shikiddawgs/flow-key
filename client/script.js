@@ -13,6 +13,20 @@ try {
     
     // Auto-reload the JSX host script when the panel is reloaded
     if (isCEP) {
+        // Auto-Focus Wrapper: Prevent AE from losing focus after panel interactions
+        const originalEval = csInterface.evalScript.bind(csInterface);
+        csInterface.evalScript = (script, callback) => {
+            if (script.includes('$.evalFile')) {
+                originalEval(script, callback);
+                return;
+            }
+            originalEval(script, (res) => {
+                originalEval("app.activate();", () => {
+                    if (callback) callback(res);
+                });
+            });
+        };
+
         var extPath = csInterface.getSystemPath(SystemPath.EXTENSION);
         var hostPath = extPath + '/host/index.jsx';
         csInterface.evalScript('$.evalFile("' + hostPath + '")');
