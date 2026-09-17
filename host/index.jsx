@@ -587,23 +587,36 @@ function createSmartNull() {
         app.beginUndoGroup("Create Smart Null");
         
         var has3D = false;
+        var topLayer = selLayers[0];
         
-        var nullLayer = comp.layers.addNull(comp.duration);
-        nullLayer.name = "Null Control";
-        nullLayer.position.setValue([comp.width/2, comp.height/2]);
-        
-        if (selLayers.length > 0) {
-            for (var i = 0; i < selLayers.length; i++) {
-                if (selLayers[i].threeDLayer) has3D = true;
-                selLayers[i].parent = nullLayer;
-            }
+        for (var j = 0; j < selLayers.length; j++) {
+            if (selLayers[j].threeDLayer) has3D = true;
+            if (selLayers[j].index < topLayer.index) topLayer = selLayers[j];
         }
+        
+        // Get timing and position from the first selected layer
+        var refLayer = selLayers[0];
+        var layerIn = refLayer.inPoint;
+        var layerOut = refLayer.outPoint;
+        var layerDur = layerOut - layerIn;
+        
+        var nullLayer = comp.layers.addNull(layerDur);
+        nullLayer.name = "Null Control";
+        nullLayer.startTime = layerIn;
         
         if (has3D) nullLayer.threeDLayer = true;
         
-        if (selLayers.length > 0) {
-            nullLayer.moveBefore(selLayers[0]);
+        if (refLayer.transform && refLayer.transform.position) {
+            nullLayer.position.setValue(refLayer.transform.position.value);
+        } else {
+            nullLayer.position.setValue([comp.width/2, comp.height/2]);
         }
+        
+        for (var i = 0; i < selLayers.length; i++) {
+            selLayers[i].parent = nullLayer;
+        }
+        
+        nullLayer.moveBefore(topLayer);
         
         app.endUndoGroup();
         return "true";
@@ -660,22 +673,36 @@ function createCamera() {
             win.close(0);
         };
         
-        if (win.show() === 1) {
+            if (win.show() === 1) {
             app.beginUndoGroup("Create Camera");
             var selLayers = comp.selectedLayers;
+            
+            var topLayer = selLayers[0];
+            for (var j = 1; j < selLayers.length; j++) {
+                if (selLayers[j].index < topLayer.index) topLayer = selLayers[j];
+            }
+            
+            // Get timing from the first selected layer
+            var refLayer = selLayers[0];
+            var layerIn = refLayer.inPoint;
+            var layerOut = refLayer.outPoint;
             
             var cam = comp.layers.addCamera("Camera " + presetVal + "mm", [comp.width/2, comp.height/2]);
             var zoom = (comp.width * presetVal) / 36;
             if (cam.property("Zoom")) cam.property("Zoom").setValue(zoom);
             if (cam.transform.position) cam.transform.position.setValue([comp.width/2, comp.height/2, -zoom]);
             
-            if (selLayers.length > 0) {
-                for (var i = 0; i < selLayers.length; i++) {
-                    if (!selLayers[i].threeDLayer) {
-                        selLayers[i].threeDLayer = true;
-                    }
+            // Match camera duration to selected layer
+            cam.inPoint = layerIn;
+            cam.outPoint = layerOut;
+            
+            for (var i = 0; i < selLayers.length; i++) {
+                if (!selLayers[i].threeDLayer) {
+                    selLayers[i].threeDLayer = true;
                 }
             }
+            
+            cam.moveBefore(topLayer);
             
             app.endUndoGroup();
             return "true";
@@ -698,14 +725,23 @@ function createAdjustmentLayer() {
             return "error";
         }
         
-        app.beginUndoGroup("Create Adjustment Layer");
-        var adj = comp.layers.addSolid([1,1,1], "Adjustment Layer", comp.width, comp.height, comp.pixelAspect, comp.duration);
-        adj.adjustmentLayer = true;
-        adj.startTime = 0;
-        
-        if (selLayers.length > 0) {
-            adj.moveBefore(selLayers[0]);
+        var topLayer = selLayers[0];
+        for (var j = 1; j < selLayers.length; j++) {
+            if (selLayers[j].index < topLayer.index) topLayer = selLayers[j];
         }
+        
+        // Get timing from the first selected layer
+        var refLayer = selLayers[0];
+        var layerIn = refLayer.inPoint;
+        var layerOut = refLayer.outPoint;
+        var layerDur = layerOut - layerIn;
+        
+        app.beginUndoGroup("Create Adjustment Layer");
+        var adj = comp.layers.addSolid([1,1,1], "Adjustment Layer", comp.width, comp.height, comp.pixelAspect, layerDur);
+        adj.adjustmentLayer = true;
+        adj.startTime = layerIn;
+        
+        adj.moveBefore(topLayer);
         
         app.endUndoGroup();
         return "true";
@@ -726,13 +762,22 @@ function createSolid() {
             return "error";
         }
         
-        app.beginUndoGroup("Create Solid");
-        var solid = comp.layers.addSolid([0.5, 0.5, 0.5], "Solid", comp.width, comp.height, comp.pixelAspect, comp.duration);
-        solid.startTime = 0;
-        
-        if (selLayers.length > 0) {
-            solid.moveBefore(selLayers[0]);
+        var topLayer = selLayers[0];
+        for (var j = 1; j < selLayers.length; j++) {
+            if (selLayers[j].index < topLayer.index) topLayer = selLayers[j];
         }
+        
+        // Get timing from the first selected layer
+        var refLayer = selLayers[0];
+        var layerIn = refLayer.inPoint;
+        var layerOut = refLayer.outPoint;
+        var layerDur = layerOut - layerIn;
+        
+        app.beginUndoGroup("Create Solid");
+        var solid = comp.layers.addSolid([0.5, 0.5, 0.5], "Solid", comp.width, comp.height, comp.pixelAspect, layerDur);
+        solid.startTime = layerIn;
+        
+        solid.moveBefore(topLayer);
         
         app.endUndoGroup();
         return "true";
@@ -747,9 +792,37 @@ function createTextLayer() {
         var comp = app.project.activeItem;
         if (!comp || !(comp instanceof CompItem)) return "error";
         
+        var selLayers = comp.selectedLayers;
+        if (selLayers.length === 0) {
+            alert("Please select at least one layer.");
+            return "error";
+        }
+        
+        var topLayer = selLayers[0];
+        for (var j = 1; j < selLayers.length; j++) {
+            if (selLayers[j].index < topLayer.index) topLayer = selLayers[j];
+        }
+        
+        // Get timing from the first selected layer
+        var refLayer = selLayers[0];
+        var layerIn = refLayer.inPoint;
+        var layerOut = refLayer.outPoint;
+        
         app.beginUndoGroup("Create Text Layer");
         var textLayer = comp.layers.addText("TEXT");
-        textLayer.position.setValue([comp.width/2, comp.height/2]);
+        
+        // Match text layer duration and position immediately to prevent visual glitch
+        textLayer.moveBefore(topLayer);
+        textLayer.inPoint = layerIn;
+        textLayer.outPoint = layerOut;
+        
+        if (refLayer.transform && refLayer.transform.position) {
+            if (refLayer.threeDLayer) textLayer.threeDLayer = true;
+            textLayer.position.setValue(refLayer.transform.position.value);
+        } else {
+            textLayer.position.setValue([comp.width/2, comp.height/2]);
+        }
+        
         app.endUndoGroup();
         return "true";
     } catch(e) {
@@ -850,17 +923,26 @@ function createShapeLayer(shapeName) {
         for (var i = 0; i < iterations; i++) {
             var targetLayer = selLayers.length > 0 ? selLayers[i] : null;
             
-            var shapeLayer = comp.layers.addShape();
-            shapeLayer.name = shapeName + (targetLayer ? " (" + targetLayer.name + ")" : "");
-            
-            var shapeGroup = shapeLayer.property("ADBE Root Vectors Group");
-            
+            // 1. Calculate bounds BEFORE creating layer (sourceRectAtTime forces a UI refresh)
             var bounds = { left: -200, top: -200, width: 400, height: 400 };
             if (targetLayer) {
                 bounds = targetLayer.sourceRectAtTime(comp.time, false);
                 if (bounds.width <= 0) bounds.width = 400;
                 if (bounds.height <= 0) bounds.height = 400;
             }
+            
+            // 2. Add layer
+            var shapeLayer = comp.layers.addShape();
+            shapeLayer.name = shapeName + (targetLayer ? " (" + targetLayer.name + ")" : "");
+            
+            // 3. Immediately move and trim to prevent timeline visual glitch
+            if (targetLayer) {
+                shapeLayer.moveBefore(targetLayer);
+                shapeLayer.inPoint = targetLayer.inPoint;
+                shapeLayer.outPoint = targetLayer.outPoint;
+            }
+            
+            var shapeGroup = shapeLayer.property("ADBE Root Vectors Group");
             
             var w = bounds.width;
             var h = bounds.height;
@@ -925,8 +1007,6 @@ function createShapeLayer(shapeName) {
                     try { shapeLayer.transform.zRotation.setValue(targetLayer.transform.zRotation.value); } catch(e){}
                     try { shapeLayer.transform.orientation.setValue(targetLayer.transform.orientation.value); } catch(e){}
                 }
-                
-                shapeLayer.moveBefore(targetLayer);
             } else {
                 shapeLayer.position.setValue([comp.width/2, comp.height/2]);
             }
@@ -1085,3 +1165,48 @@ function setAnchorPoint(alignX, alignY) {
         return "error";
     }
 }
+
+// ─── Motion Tile Preset ──────────────────────────────────────────────
+function applyMotionTilePreset() {
+    try {
+        var comp = app.project.activeItem;
+        if (!comp || !(comp instanceof CompItem)) {
+            alert("Please select a composition.");
+            return "error";
+        }
+
+        var sel = comp.selectedLayers;
+        if (sel.length === 0) {
+            alert("Please select at least one layer.");
+            return "error";
+        }
+
+        app.beginUndoGroup("Apply Motion Tile Preset");
+
+        for (var i = 0; i < sel.length; i++) {
+            var layer = sel[i];
+            var effects = layer.property("ADBE Effect Parade");
+            
+            // Periksa apakah layer mendukung efek (misalnya, Camera/Light tidak mendukung)
+            if (effects !== null) {
+                var tile = effects.addProperty("ADBE Tile");
+                if (tile !== null) {
+                    // Output Width → 300
+                    tile.property("ADBE Tile-0004").setValue(300);
+                    // Output Height → 300
+                    tile.property("ADBE Tile-0005").setValue(300);
+                    // Mirror Edges → checked (1)
+                    tile.property("ADBE Tile-0006").setValue(1);
+                }
+            }
+        }
+
+        app.endUndoGroup();
+        return "true";
+    } catch (e) {
+        if (app.project) app.endUndoGroup();
+        alert("Motion Tile Error: " + e.toString());
+        return "error";
+    }
+}
+

@@ -1154,6 +1154,12 @@ const viewPanels = document.querySelectorAll('.view-panel');
 window.switchMode = function(modeName) {
     const targetId = modeName.startsWith('view-') ? modeName : `view-${modeName}`;
     
+    // Skip bounce animation if target panel is already active
+    const targetPanel = document.getElementById(targetId);
+    if (targetPanel && targetPanel.classList.contains('active')) {
+        return;
+    }
+    
     // 1. Remove active + animation class from all buttons and panels
     tabBtns.forEach(b => b.classList.remove('active'));
     viewPanels.forEach(p => {
@@ -1166,7 +1172,6 @@ window.switchMode = function(modeName) {
     if (targetBtn) targetBtn.classList.add('active');
     
     // 3. Find target panel and activate with smooth bounce animation
-    const targetPanel = document.getElementById(targetId);
     if (targetPanel) {
         targetPanel.classList.add('active');
         // Force DOM reflow to restart CSS animation cleanly
@@ -1596,6 +1601,15 @@ tabBtns.forEach(btn => {
             });
         }
     });
+    
+    // 2b. Motion Tile (Effect utility)
+    const btnMotionTile = document.getElementById("btnMotionTile");
+    if (btnMotionTile) {
+        btnMotionTile.addEventListener("click", () => {
+            if (!isCEP) return console.log("[MOCK] applyMotionTilePreset()");
+            csInterface.evalScript("applyMotionTilePreset()");
+        });
+    }
     
     // 3. Anchor Point
     const anchorBtns = [
