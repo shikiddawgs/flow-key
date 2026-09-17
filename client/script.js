@@ -1357,21 +1357,18 @@ tabBtns.forEach(btn => {
     if (sliderAmp) {
         sliderAmp.addEventListener('input', () => {
             updateBounceSlider(sliderAmp, valAmp, 2);
-            handleSliderApply();
         });
         sliderAmp.addEventListener('change', handleSliderApply);
     }
     if (sliderFreq) {
         sliderFreq.addEventListener('input', () => {
             updateBounceSlider(sliderFreq, valFreq, 1);
-            handleSliderApply();
         });
         sliderFreq.addEventListener('change', handleSliderApply);
     }
     if (sliderDecay) {
         sliderDecay.addEventListener('input', () => {
             updateBounceSlider(sliderDecay, valDecay, 1);
-            handleSliderApply();
         });
         sliderDecay.addEventListener('change', handleSliderApply);
     }
