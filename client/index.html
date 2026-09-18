@@ -490,20 +490,21 @@
                                     style="background-color: #D500F9;"></button>
                             </div>
                         </div>
-                        <div class="settings-row" style="margin-top: 8px;">
-                            <button id="colorPickerBtn" class="hex-full-btn" style="background-color: #FF2A75;">
-                                <span class="hex-text">#FF2A75</span>
+                        <div class="settings-row" style="margin-top: 12px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <label style="font-size: 11px; color: rgba(255,255,255,0.7);">Custom Accent Hue</label>
+                            </div>
+                            <input type="range" id="hueSlider" min="0" max="360" value="338" style="width: 100%; height: 12px; border-radius: 6px; outline: none; -webkit-appearance: none; background: linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%); cursor: pointer;">
+                            <style>
+                                #hueSlider::-webkit-slider-thumb {
+                                    -webkit-appearance: none; appearance: none;
+                                    width: 16px; height: 16px; border-radius: 50%;
+                                    background: white; border: 2px solid #333; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+                                }
+                            </style>
+                            <button id="hueApplyBtn" class="hex-full-btn" style="background-color: #FF2A75; margin-top: 4px; border: none; cursor: pointer;">
+                                <span class="hex-text" id="hueHexText">#FF2A75</span>
                             </button>
-                            <input type="color" id="hiddenColorInput" value="#FF2A75" style="display: none;">
-                        </div>
-                    </div>
-
-                    <div class="settings-card" style="margin-bottom: 24px;">
-                        <div class="settings-card-title">PRESETS MANAGEMENT</div>
-                        <div class="settings-btn-group">
-                            <button id="importPresetsBtn" class="settings-btn">Import Presets</button>
-                            <button id="exportPresetsBtn" class="settings-btn">Export Presets</button>
-                            <input type="file" id="importPresetsInput" accept=".json" style="display: none;">
                         </div>
                     </div>
 
@@ -512,6 +513,7 @@
         </div>
 
         <!-- FLOATING BOTTOM DOCK -->
+        <div class="dock-trigger"></div>
         <div class="dock-container">
             <nav class="bottom-navbar liquid-glass" id="bottomNavbar">
                 <div class="nav-indicator" id="navIndicator"></div>

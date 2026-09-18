@@ -1419,22 +1419,56 @@ tabBtns.forEach(btn => {
     const sliderBlur       = document.getElementById("sliderBlur");
     const valBlur          = document.getElementById("valBlur");
     const glassSegments    = document.querySelectorAll(".settings-card .segment");
-    const hiddenColorInput = document.getElementById("hiddenColorInput");
-    const colorPickerBtn   = document.getElementById("colorPickerBtn");
+    const hueSlider        = document.getElementById("hueSlider");
+    const hueApplyBtn      = document.getElementById("hueApplyBtn");
+    const hueHexText       = document.getElementById("hueHexText");
 
     // --- Helpers ---
-    const getAccent = () => (hiddenColorInput ? hiddenColorInput.value.toUpperCase() : (accentColor || '#FF2A75'));
+    const getAccent = () => {
+        return hueHexText ? hueHexText.textContent : (accentColor || '#FF2A75');
+    };
+
+    function hslToHex(h, s, l) {
+        l /= 100;
+        const a = s * Math.min(l, 1 - l) / 100;
+        const f = n => {
+            const k = (n + h / 30) % 12;
+            const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+            return Math.round(255 * color).toString(16).padStart(2, '0');
+        };
+        return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
+    }
+    
+    function hexToHue(hex) {
+        let r = 0, g = 0, b = 0;
+        if (hex && hex.length === 7) {
+            r = parseInt(hex.substring(1, 3), 16) / 255;
+            g = parseInt(hex.substring(3, 5), 16) / 255;
+            b = parseInt(hex.substring(5, 7), 16) / 255;
+        }
+        let max = Math.max(r, g, b), min = Math.min(r, g, b);
+        let h = 0;
+        if (max != min) {
+            let d = max - min;
+            switch (max) {
+                case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                case g: h = (b - r) / d + 2; break;
+                case b: h = (r - g) / d + 4; break;
+            }
+            h /= 6;
+        }
+        return Math.round(h * 360);
+    }
 
     const updateColorPickerUI = (color) => {
         if (!color) return;
         color = color.toUpperCase();
-        if (colorPickerBtn) {
-            colorPickerBtn.style.backgroundColor = color;
-            const hexText = colorPickerBtn.querySelector('.hex-text');
-            if (hexText) hexText.textContent = color;
+        if (hueApplyBtn) {
+            hueApplyBtn.style.backgroundColor = color;
+            if (hueHexText) hueHexText.textContent = color;
         }
-        if (hiddenColorInput) {
-            hiddenColorInput.value = color;
+        if (hueSlider) {
+            hueSlider.value = hexToHue(color);
         }
         // Sync swatch active state
         document.querySelectorAll('.color-swatch').forEach(s => {
@@ -1574,27 +1608,10 @@ tabBtns.forEach(btn => {
         });
     });
 
-    if (hiddenColorInput && colorPickerBtn) {
-        colorPickerBtn.addEventListener("click", async () => {
-            if ('EyeDropper' in window) {
-                try {
-                    const eyeDropper = new EyeDropper();
-                    const result = await eyeDropper.open();
-                    updateColorPickerUI(result.sRGBHex.toUpperCase());
-                    saveSettings();
-                    updateAllSliders();
-                    return;
-                } catch (err) {}
-            }
-            hiddenColorInput.click();
-        });
-        hiddenColorInput.addEventListener("input", (e) => {
-            updateColorPickerUI(e.target.value.toUpperCase());
-            saveSettings();
-            updateAllSliders();
-        });
-        hiddenColorInput.addEventListener("change", (e) => {
-            updateColorPickerUI(e.target.value.toUpperCase());
+    if (hueSlider) {
+        hueSlider.addEventListener("input", (e) => {
+            const hex = hslToHex(e.target.value, 100, 50);
+            updateColorPickerUI(hex);
             saveSettings();
             updateAllSliders();
         });
