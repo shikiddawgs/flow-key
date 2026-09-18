@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ExtensionManifest Version="9.0" ExtensionBundleId="com.kidfaster.panel" ExtensionBundleVersion="1.0.0"
-    ExtensionBundleName="KidFaster" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<ExtensionManifest Version="9.0" ExtensionBundleId="com.kidfaster.panel.dev" ExtensionBundleVersion="1.0.0"
+    ExtensionBundleName="KidFaster (Dev)" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <ExtensionList>
-        <Extension Id="com.kidfaster.panel" Version="1.0.0" />
+        <Extension Id="com.kidfaster.panel.dev" Version="1.0.0" />
     </ExtensionList>
     <ExecutionEnvironment>
         <HostList>
@@ -17,7 +17,7 @@
         </RequiredRuntimeList>
     </ExecutionEnvironment>
     <DispatchInfoList>
-        <Extension Id="com.kidfaster.panel">
+        <Extension Id="com.kidfaster.panel.dev">
             <DispatchInfo>
                 <Resources>
                     <MainPath>./client/index.html</MainPath>
@@ -32,7 +32,7 @@
                 </Lifecycle>
                 <UI>
                     <Type>Panel</Type>
-                    <Menu>KidFaster</Menu>
+                    <Menu>KidFaster (Dev)</Menu>
                     <Geometry>
                         <Size>
                             <Height>550</Height>

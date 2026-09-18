@@ -55,6 +55,16 @@ async function build() {
             await fs.writeFile(scriptPath, obfuscationResult.getObfuscatedCode());
         }
 
+        // 3.5. Convert Dev Manifest to Production Manifest
+        console.log('[3.5/5] Updating manifest.xml for Production...');
+        const manifestPath = path.join(DIST_DIR, 'CSXS', 'manifest.xml');
+        if (await fs.pathExists(manifestPath)) {
+            let manifest = await fs.readFile(manifestPath, 'utf8');
+            manifest = manifest.replace(/com\.kidfaster\.panel\.dev/g, 'com.kidfaster.panel');
+            manifest = manifest.replace(/KidFaster \(Dev\)/g, 'KidFaster');
+            await fs.writeFile(manifestPath, manifest);
+        }
+
         // 4. Compile ExtendScript JSX to JSXBIN
         console.log('[4/5] Compiling host/index.jsx to JSXBIN...');
         const hostJsxPath = path.join(DIST_DIR, 'host', 'index.jsx');
