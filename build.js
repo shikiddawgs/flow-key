@@ -33,8 +33,6 @@ async function build() {
         // 3. Obfuscate Client JS
         console.log('[3/5] Obfuscating client/script.js...');
         const scriptPath = path.join(DIST_DIR, 'client', 'script.js');
-        const minScriptPath = path.join(DIST_DIR, 'client', 'script.min.js');
-        
         if (await fs.pathExists(scriptPath)) {
             const rawCode = await fs.readFile(scriptPath, 'utf8');
             const obfuscationResult = JavaScriptObfuscator.obfuscate(rawCode, {
@@ -54,16 +52,7 @@ async function build() {
                 unicodeEscapeSequence: false
             });
             
-            await fs.writeFile(minScriptPath, obfuscationResult.getObfuscatedCode());
-            await fs.remove(scriptPath); // Delete the original raw JS
-            
-            // Update index.html to point to script.min.js
-            const indexPath = path.join(DIST_DIR, 'client', 'index.html');
-            if (await fs.pathExists(indexPath)) {
-                let html = await fs.readFile(indexPath, 'utf8');
-                html = html.replace('src="script.js"', 'src="script.min.js"');
-                await fs.writeFile(indexPath, html);
-            }
+            await fs.writeFile(scriptPath, obfuscationResult.getObfuscatedCode());
         }
 
         // 4. Compile ExtendScript JSX to JSXBIN
