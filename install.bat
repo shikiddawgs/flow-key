@@ -2,6 +2,9 @@
 title KidFaster Extension Installer
 color 0A
 
+:: Switch to script directory to prevent "file not found" errors when running as Admin
+cd /d "%~dp0"
+
 echo ===================================================
 echo     KidFaster Extension Installer (Windows)
 echo ===================================================
@@ -11,16 +14,20 @@ echo.
 pause
 
 :: Check for Administrator privileges
+echo.
+echo Checking for administrative privileges...
 net session >nul 2>&1
 if %errorLevel% neq 0 (
-    echo.
     echo Requesting Administrative Privileges...
     echo Please click "Yes" on the User Account Control (UAC) prompt.
-    powershell -Command "Start-Process '%~0' -Verb RunAs"
+    :: Use short path to avoid space/quote issues in PowerShell
+    powershell -Command "Start-Process cmd -ArgumentList '/c %~s0' -Verb RunAs"
     exit /b
 )
 
+echo Success: Administrative privileges confirmed.
 echo.
+
 echo [1/3] Enabling CEP PlayerDebugMode...
 :: Enable PlayerDebugMode for all modern CSXS versions
 REG ADD "HKCU\Software\Adobe\CSXS.9" /v PlayerDebugMode /t REG_SZ /d 1 /f >nul
@@ -41,7 +48,7 @@ if not exist "%APPDATA%\Adobe\CEP\extensions" (
 )
 if exist "%TARGET_DIR%" (
     echo Removing old version...
-    rmdir /s /q "%TARGET_DIR%"
+    rmdir /s /q "%TARGET_DIR%" >nul 2>&1
 )
 mkdir "%TARGET_DIR%"
 
@@ -56,7 +63,7 @@ if exist "%TARGET_DIR%\data\my_presets.json" (
 
 echo.
 echo ===================================================
-echo   Installation Complete!
+echo KidFaster Extension has been successfully installed!
 echo ===================================================
 echo.
 echo You can now restart After Effects.

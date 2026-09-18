@@ -1239,6 +1239,12 @@ window.switchMode = function(modeName) {
     const targetBtn = Array.from(tabBtns).find(b => b.getAttribute('data-target') === targetId);
     if (targetBtn) targetBtn.classList.add('active');
     
+    // Toggle coordinate display
+    const coordRow = document.querySelector('.coord-row');
+    if (coordRow) {
+        coordRow.style.display = (targetId === 'view-value' || targetId === 'value') ? 'flex' : 'none';
+    }
+
     // 3. Find target panel and activate with smooth bounce animation
     if (targetPanel) {
         targetPanel.classList.add('active');
