@@ -29,11 +29,6 @@ async function build() {
                 }
             });
         }
-        
-        // Copy install.bat
-        if (await fs.pathExists(path.join(SRC_DIR, 'install.bat'))) {
-            await fs.copy(path.join(SRC_DIR, 'install.bat'), path.join(DIST_DIR, 'install.bat'));
-        }
 
         // 3. Obfuscate Client JS
         console.log('[3/5] Obfuscating client/script.js...');

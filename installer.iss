@@ -13,6 +13,9 @@ DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 ArchitecturesInstallIn64BitMode=x64
 UninstallDisplayIcon={app}\KidFaster_Setup.exe
+WizardImageFile=installer_assets\wizard.bmp
+WizardSmallImageFile=installer_assets\wizard_small.bmp
+SetupIconFile=installer_assets\icon.ico
 
 [Files]
 ; Pulls everything from the built dist folder and bundles it into the exe
